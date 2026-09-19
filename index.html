@@ -3,292 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>戰力手帳 - 完整轉盤與扭蛋系統</title>
+    <title>戰力手帳</title>
     <style>
         :root {
-            --card-bg: rgba(0, 0, 0, 0.65);
-            --modal-bg: #2a2a2a;
+            --card-bg: rgba(20, 30, 45, 0.75);
+            --modal-bg: #222b36;
             --text-main: #ffffff;
             --accent-cyan: #00f2fe;
             --accent-gold: #ffcc00;
-            --bg-url: url('bg_male.png');
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; padding: 0; background: #121212; color: var(--text-main); display: flex; justify-content: center; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        body { background: #111; color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 
-        /* 主容器 */
+        /* 主容器 (藍天綠地背景) */
         .game-container {
             width: 100%; max-width: 900px; height: 100vh; max-height: 650px;
             position: relative; overflow: hidden; border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: flex;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6); display: flex;
             flex-direction: column; justify-content: space-between;
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%); /* 備援藍天綠地背景 */
+            background-image: url('bg_male.png'), linear-gradient(180deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            background-size: cover; background-position: center;
         }
 
-        .game-container::before {
-            content: ''; position: absolute; top: -5%; left: -5%; width: 110%; height: 110%;
-            background-image: var(--bg-url); background-size: cover; background-position: center;
-            z-index: 1; animation: bgBreathe 15s ease-in-out infinite alternate;
-        }
-
-        @keyframes bgBreathe {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.05); }
-        }
-
-        /* 頂部/底部 HUD */
-        .top-hud, .bottom-hud { display: flex; justify-content: space-between; align-items: center; padding: 16px; z-index: 10; }
+        /* 頂部 HUD (主頁) */
+        .top-hud { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; z-index: 10; }
         .user-profile-card {
-            background: var(--card-bg); backdrop-filter: blur(8px); padding: 8px 14px;
-            border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: var(--card-bg); backdrop-filter: blur(8px); padding: 10px 14px;
+            border-radius: 12px; display: flex; align-items: center; gap: 12px;
+            border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
         }
-        .avatar-box { width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid var(--accent-gold); }
-        .quick-wheels { display: flex; gap: 12px; }
-        
-        .circle-btn {
-            width: 58px; height: 58px; border-radius: 50%;
-            background: linear-gradient(135deg, #b100ff 0%, #00e1ff 100%);
-            border: 2px solid #fff; color: white; font-weight: bold; font-size: 12px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-        .circle-btn.task-btn { background: linear-gradient(135deg, #ff9900 0%, #ff5500 100%); }
+        .avatar-box { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 26px; border: 2px solid var(--accent-gold); }
+        .user-info { display: flex; flex-direction: column; gap: 2px; }
+        .setting-btn { width: 40px; height: 40px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
 
-        /* 彈窗基礎 */
+        /* 中間建模人物與寵物 */
+        .center-stage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%); display: flex; align-items: flex-end; gap: 20px; z-index: 5; }
+        .character-avatar { font-size: 100px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)); }
+        .pet-avatar { font-size: 50px; animation: bounce 2s infinite ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* 底部 HUD */
+        .bottom-hud { display: flex; justify-content: space-between; align-items: flex-end; padding: 20px; z-index: 10; }
+        .btn-main { background: var(--card-bg); border: 1px solid var(--accent-cyan); color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; backdrop-filter: blur(6px); }
+        .quick-wheels { display: flex; gap: 12px; }
+        .circle-btn {
+            width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.6);
+            border: 2px solid var(--accent-gold); color: white; font-size: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        /* 彈窗遮罩 */
         .modal-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center;
-            align-items: center; z-index: 100; backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.75); display: none; justify-content: center;
+            align-items: center; z-index: 100; backdrop-filter: blur(4px);
         }
         .modal-card {
             background: var(--modal-bg); border-radius: 16px; padding: 20px;
-            width: 90%; max-width: 440px; border: 1px solid #444; position: relative;
+            width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.2); position: relative;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px; }
-        .modal-title { font-size: 18px; font-weight: bold; color: var(--accent-cyan); }
-        .btn-close { background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; }
+        .modal-title { font-size: 16px; font-weight: bold; color: var(--accent-cyan); }
+        .btn-close { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; }
 
-        /* 全螢幕整頁面 (戰力轉盤 & 寵物扭蛋) */
+        /* 全螢幕頁面 (戰力轉盤 & 寵物扭蛋) */
         .full-page-view {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #18181c; z-index: 90; display: none; flex-direction: column;
+            background: #181d24; z-index: 90; display: none; flex-direction: column;
             justify-content: space-between; padding: 20px; box-sizing: border-box;
         }
         .page-header { display: flex; justify-content: space-between; align-items: center; }
-        .btn-prob { background: #333; border: 1px solid #666; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-        .btn-back { background: #ff4757; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-back { background: #e74c3c; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 小彈窗：開啟轉盤選擇 (對應圖7) */
-        .wheel-select-dialog { text-align: center; }
-        .wheel-select-btn {
-            width: 100%; padding: 14px; margin: 8px 0; background: #333; border: 1px solid var(--accent-cyan);
-            color: #fff; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
-        }
-        .wheel-select-btn:hover { background: var(--accent-cyan); color: #000; }
-
-        /* 戰力轉盤頁面 (對應圖9) */
-        .wheel-container {
-            position: relative; width: 260px; height: 260px; margin: 10px auto;
-            border-radius: 50%; border: 6px solid var(--accent-gold); overflow: hidden;
-            transition: transform 3s cubic-bezier(0.15, 0.99, 0.35, 1);
-            background: conic-gradient(#ff5252 0 60deg, #ffb142 60deg 120deg, #706fd3 120deg 180deg, #33d9b2 180deg 240deg, #34ace0 240deg 300deg, #ff793f 300deg 360deg);
+        /* 戰力轉盤 (包含文字刻度) */
+        .wheel-wrapper { position: relative; width: 260px; height: 260px; margin: 15px auto; }
+        .wheel-disc {
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent-gold);
+            position: relative; overflow: hidden; transition: transform 3s cubic-bezier(0.15, 0.99, 0.35, 1);
+            background: conic-gradient(#ff7675 0 60deg, #fdcb6e 60deg 120deg, #6c5ce7 120deg 180deg, #00b894 180deg 240deg, #0984e3 240deg 300deg, #e17055 300deg 360deg);
         }
         .wheel-pointer {
-            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
-            border-bottom: 24px solid var(--accent-gold); z-index: 10;
+            border-top: 24px solid var(--accent-gold); z-index: 10;
+        }
+        .wheel-label {
+            position: absolute; width: 100%; height: 100%; text-align: center;
+            font-size: 13px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
+            padding-top: 15px; transform-origin: 50% 50%;
         }
 
-        /* 寵物扭蛋頁面 (對應图8) */
-        .gacha-display-box {
-            width: 180px; height: 180px; margin: 10px auto; background: #222;
-            border: 2px solid var(--accent-cyan); border-radius: 12px; display: flex;
-            flex-direction: column; align-items: center; justify-content: center; position: relative;
-        }
-        .gacha-img { font-size: 70px; animation: floatAnim 2s infinite ease-in-out; }
-        @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        
-        .gacha-controls { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
-        .btn-draw {
-            background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 10px 20px;
-            border-radius: 20px; font-weight: bold; cursor: pointer; color: #000;
-        }
-        .milestone-box { background: #222; padding: 10px; border-radius: 8px; font-size: 12px; color: #aaa; text-align: center; }
+        /* 寵物扭蛋展示 */
+        .gacha-box { width: 160px; height: 160px; margin: 15px auto; background: rgba(255,255,255,0.05); border: 2px solid var(--accent-cyan); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 70px; }
+        .btn-draw { background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #000; margin: 0 5px; }
 
-        /* 任務彈窗 */
-        .task-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
+        /* 選單與按鈕設定 */
+        .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .input-text { background: #111; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 6px; width: 140px; }
+        .pet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+        .pet-grid-item { background: #111; border: 1px solid #444; border-radius: 6px; padding: 8px; text-align: center; font-size: 20px; cursor: pointer; }
+        .pet-grid-item.locked { opacity: 0.3; }
+        .progress-bar-bg { width: 100%; background: #333; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 4px; }
+        .progress-bar-fill { width: 50%; background: var(--accent-cyan); height: 100%; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
-    <!-- 主頁頂部 HUD -->
+    <!-- 頂部 HUD (對應圖12) -->
     <div class="top-hud">
-        <div class="user-profile-card">
+        <!-- 點擊頭像打開小彈窗 (圖13/14/15) -->
+        <div class="user-profile-card" onclick="openModal('avatarModal')">
             <div class="avatar-box" id="hudAvatar">🏆</div>
-            <div>
-                <div style="font-weight:bold;">Nickchen ♂</div>
-                <div style="font-size:12px; color:var(--accent-cyan);" id="mainPower">戰力: 1000</div>
+            <div class="user-info">
+                <div style="font-weight:bold;"><span id="hudName">Nickchen</span> <span id="hudGender">♂</span></div>
+                <div style="font-size:12px; color:var(--accent-cyan);">Level <span id="hudLevel">1</span> (戰力: <span id="hudPower">1000</span>)</div>
             </div>
         </div>
-        <button class="btn-prob" onclick="openModal('taskModal')">📋 任務</button>
+        <!-- 設定圖標 (圖12) -->
+        <div class="setting-btn" onclick="openModal('settingsModal')">⚙️</div>
     </div>
 
-    <!-- 主頁底部 HUD -->
+    <!-- 中間建模人物與寵物 (圖12) -->
+    <div class="center-stage">
+        <div class="character-avatar" id="stageCharacter">🧍‍♂️</div>
+        <div class="pet-avatar" id="stagePet">🐉</div>
+    </div>
+
+    <!-- 底部 HUD (圖12) -->
     <div class="bottom-hud">
-        <button class="btn-prob" style="padding: 10px 18px; font-size: 14px;" onclick="openModal('taskModal')">📋 待完成事項</button>
+        <button class="btn-main" onclick="alert('待完成事項：\n1. 每日登入\n2. 戰力轉盤 1 次\n3. 寵物扭蛋 1 次')">待完成事項</button>
         <div class="quick-wheels">
-            <div class="circle-btn task-btn" onclick="openModal('taskModal')">📋<br>任務</div>
-            <!-- 點擊觸發轉盤選擇小彈窗 (圖7) -->
-            <div class="circle-btn" onclick="openModal('wheelSelectModal')">🎡<br>Buff</div>
+            <!-- 點擊開啟轉盤選擇彈窗 (圖9) -->
+            <div class="circle-btn" onclick="openModal('wheelSelectModal')">🎡<br>轉盤</div>
+            <div class="circle-btn" onclick="openModal('settingsModal')">⚙️<br>設定</div>
         </div>
     </div>
 
-    <!-- [圖7] 點擊開啟轉盤（小彈窗） -->
+    <!-- [圖9] 點開轉盤小彈窗 -->
     <div class="modal-overlay" id="wheelSelectModal">
-        <div class="modal-card wheel-select-dialog">
+        <div class="modal-card" style="text-align: center;">
             <div class="modal-header">
-                <div class="modal-title">開啟轉盤</div>
+                <div class="modal-title">點開轉盤 (小彈窗)</div>
                 <button class="btn-close" onclick="closeModal('wheelSelectModal')">✕</button>
             </div>
-            <button class="wheel-select-btn" onclick="openFullPage('powerWheelPage')">⚔️ 戰力轉盤</button>
-            <button class="wheel-select-btn" onclick="openFullPage('petGachaPage')">🐾 寵物扭蛋</button>
+            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('powerWheelPage')">⚔️ 戰力轉盤</button>
+            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('petGachaPage')">🐾 寵物扭蛋</button>
         </div>
     </div>
 
-    <!-- [圖9] 戰力轉盤 (整頁) -->
-    <div class="full-page-view" id="powerWheelPage">
-        <div class="page-header">
-            <button class="btn-prob" onclick="alert('戰力轉盤機率：\nSSR: 3%\nSR: 10%\nR: 50%\nN: 37%')">機率列表</button>
-            <div style="font-weight: bold; font-size: 18px; color: var(--accent-gold);">戰力轉盤 (整頁)</div>
-            <div></div>
-        </div>
-
-        <div style="text-align: center;">
-            <div style="font-size: 16px; margin-bottom: 10px;" id="wheelPowerDisplay">目前戰力：1000</div>
-            <div style="position: relative; width: 260px; margin: 0 auto;">
-                <div class="wheel-pointer"></div>
-                <div class="wheel-container" id="wheelDisc"></div>
-            </div>
-            <button class="btn-draw" style="margin-top: 25px; padding: 12px 36px; font-size: 16px;" onclick="spinWheel()">開始旋轉</button>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end;">
-            <button class="btn-back" onclick="closeFullPage('powerWheelPage')">↪ 返回主頁</button>
-        </div>
-    </div>
-
-    <!-- [圖8] 寵物扭蛋 (整頁) -->
-    <div class="full-page-view" id="petGachaPage">
-        <div class="page-header">
-            <button class="btn-prob" onclick="alert('寵物扭蛋機率：\nSAR: 1%\nAR: 9%\nSR: 30%\nR: 60%')">機率列表</button>
-            <div style="font-weight: bold; font-size: 18px; color: var(--accent-cyan);">寵物扭蛋 (整頁)</div>
-            <div></div>
-        </div>
-
-        <div style="text-align: center;">
-            <div style="font-size: 13px; color: #aaa; margin-bottom: 6px;">每日一張抽獎券 + 里程碑 (配合戰力)</div>
-            <div class="gacha-display-box">
-                <div class="gacha-img" id="gachaPetImg">🐉</div>
-                <div style="font-size: 12px; color: var(--accent-gold); margin-top: 6px;">寵物圖片 (SAR - AR) 輪播循環</div>
-            </div>
-
-            <div style="font-size: 14px; margin: 8px 0;" id="drawCountText">已抽次數：0 次</div>
-
-            <div class="gacha-controls">
-                <button class="btn-draw" onclick="drawPet(1)">抽 1 次</button>
-                <button class="btn-draw" onclick="drawPet(10)">抽 10 次</button>
-            </div>
-
-            <div class="milestone-box" id="milestoneText">
-                🎯 里程碑到達：抽滿 10 次贈送 SAR 寵物碎片！
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end;">
-            <button class="btn-back" onclick="closeFullPage('petGachaPage')">↪ 返回主頁</button>
-        </div>
-    </div>
-
-    <!-- 任務彈窗 -->
-    <div class="modal-overlay" id="taskModal">
+    <!-- [圖12] 設定小彈窗 -->
+    <div class="modal-overlay" id="settingsModal">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="modal-title">📋 任務列表</div>
-                <button class="btn-close" onclick="closeModal('taskModal')">✕</button>
+                <div class="modal-title">點開設定 (小彈窗)</div>
+                <button class="btn-close" onclick="closeModal('settingsModal')">✕</button>
             </div>
-            <div class="task-item">
+            <div class="menu-row">
+                <span>音量 🔊</span>
+                <input type="range" min="0" max="100" value="80">
+            </div>
+            <div class="menu-row">
+                <span>音效 🎵</span>
+                <input type="range" min="0" max="100" value="80">
+            </div>
+            <div class="menu-row" style="margin-top: 10px;">
+                <span>創立時間</span>
+                <span style="color: #aaa; font-size: 13px;">2026 / 09 / 19</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- [圖13/14/15] 點開頭像小彈窗 -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">角色資訊與設定</div>
+                <button class="btn-close" onclick="closeModal('avatarModal')">✕</button>
+            </div>
+            <div class="menu-row">
+                <span>設定頭像 (擁有的寵物)</span>
+                <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="openModal('petSelectModal')">選擇</button>
+            </div>
+            <div class="menu-row">
+                <span>更改名字</span>
+                <input type="text" id="inputName" class="input-text" value="Nickchen" maxlength="10" onchange="updateName(this.value)">
+            </div>
+            <div class="menu-row">
+                <span>性別設定</span>
                 <div>
-                    <div style="font-weight:bold; font-size:14px;">每日轉盤抽獎</div>
-                    <div style="font-size:12px; color:var(--accent-gold);">+100 戰力</div>
+                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♂')">♂</button>
+                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♀')">♀</button>
                 </div>
-                <button class="btn-draw" style="padding:4px 12px; font-size:12px;" onclick="alert('任務完成！')">前往</button>
             </div>
+            <div style="margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span>戰力：<b id="modalPower">1000</b></span>
+                    <span>進度：<b id="progressText">50/100</b></span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div style="font-size: 11px; color: #888; margin-top: 4px; text-align: right;">此階至下一階的距離</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 寵物選擇九宮格小彈窗 (對應圖13/14/15右側) -->
+    <div class="modal-overlay" id="petSelectModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">選擇頭像 (依稀有度由上至下)</div>
+                <button class="btn-close" onclick="closeModal('petSelectModal')">✕</button>
+            </div>
+            <div style="font-size: 11px; color: #aaa;">亮色為擁有，灰色為未解鎖</div>
+            <div class="pet-grid">
+                <div class="pet-grid-item" onclick="selectPet('🐉')">🐉</div>
+                <div class="pet-grid-item" onclick="selectPet('🦄')">🦄</div>
+                <div class="pet-grid-item" onclick="selectPet('🦅')">🦅</div>
+                <div class="pet-grid-item locked">🐺</div>
+                <div class="pet-grid-item locked">🦁</div>
+                <div class="pet-grid-item locked">🐱</div>
+                <div class="pet-grid-item locked">🐶</div>
+                <div class="pet-grid-item locked">🦊</div>
+                <div class="pet-grid-item locked">🐰</div>
+                <div class="pet-grid-item locked">🐼</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [圖11] 戰力轉盤頁面 -->
+    <div class="full-page-view" id="powerWheelPage">
+        <div class="page-header">
+            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="alert('機率列表：\n+50戰力: 40%\n+100戰力: 30%\n+200戰力: 18%\n+300戰力: 8%\n暴擊+500: 4%')">機率列表</button>
+            <div style="font-size: 18px; font-weight: bold; color: var(--accent-gold);">戰力轉盤</div>
+            <div></div>
+        </div>
+
+        <div style="text-align: center;">
+            <!-- 圖11：目前戰力 -->
+            <div style="font-size: 16px; margin-bottom: 10px;">目前戰力：<span id="wheelCurrentPower">1000</span></div>
+            
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <div class="wheel-disc" id="wheelDisc">
+                    <div class="wheel-label" style="transform: rotate(30deg);">+50</div>
+                    <div class="wheel-label" style="transform: rotate(90deg);">+100</div>
+                    <div class="wheel-label" style="transform: rotate(150deg);">+200</div>
+                    <div class="wheel-label" style="transform: rotate(210deg);">+50</div>
+                    <div class="wheel-label" style="transform: rotate(270deg);">+300</div>
+                    <div class="wheel-label" style="transform: rotate(330deg);">+500</div>
+                </div>
+            </div>
+
+            <button class="btn-draw" style="margin-top: 15px; padding: 10px 30px;" onclick="spinWheel()">開始旋轉</button>
+        </div>
+
+        <!-- 圖11：右下角階數與點數 + 返回主頁 -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="font-size: 14px; color: var(--accent-gold);" id="rankPointText">1 階 0 點</div>
+            <button class="btn-back" onclick="closeFullPage('powerWheelPage')">↩ 返回主頁</button>
+        </div>
+    </div>
+
+    <!-- [圖10] 寵物扭蛋頁面 -->
+    <div class="full-page-view" id="petGachaPage">
+        <div class="page-header">
+            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="alert('機率列表：\nSAR: 2%\nAR: 8%\nSR: 30%\nR: 60%')">機率列表</button>
+            <div style="font-size: 18px; font-weight: bold; color: var(--accent-cyan);">寵物扭蛋</div>
+            <div></div>
+        </div>
+
+        <div style="text-align: center;">
+            <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">每日一張抽獎券 + 里程碑 (配合戰力)</div>
+            
+            <!-- 圖10：寵物圖片 (SAR - AR) 輪播 -->
+            <div class="gacha-box" id="gachaDisplay">🐉</div>
+            <div style="font-size: 12px; color: var(--accent-gold); margin-bottom: 10px;">寵物圖片 (SAR - AR) 輪播備用</div>
+
+            <div style="font-size: 14px; margin-bottom: 10px;" id="gachaDrawCount">已抽次數：0</div>
+
+            <div>
+                <button class="btn-draw" onclick="drawGacha(1)">抽 1 次</button>
+                <button class="btn-draw" onclick="drawGacha(10)">抽 10 次</button>
+            </div>
+        </div>
+
+        <!-- 圖10：里程碑與返回主頁 -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="font-size: 13px; color: #aaa;" id="milestoneText">里程碑：10 次解鎖 SAR 獎勵</div>
+            <button class="btn-back" onclick="closeFullPage('petGachaPage')">↩ 返回主頁</button>
         </div>
     </div>
 </div>
 
 <script>
-    let currentPower = 1000;
-    let totalDraws = 0;
+    // 全域變數狀態
+    let power = 1000;
+    let drawCount = 0;
+    let rank = 1;
+    let points = 0;
     let isSpinning = false;
-    const petIcons = ["🐉", "🦊", "🦄", "🦅", "🐺", "🦁"];
 
-    function updatePowerDisplay() {
-        document.getElementById("mainPower").innerText = `戰力: ${currentPower}`;
-        document.getElementById("wheelPowerDisplay").innerText = `目前戰力：${currentPower}`;
-    }
-
-    function openModal(id) { document.getElementById(id).style.display = "flex"; }
-    function closeModal(id) { document.getElementById(id).style.display = "none"; }
-
-    function openFullPage(pageId) {
-        closeModal('wheelSelectModal');
-        document.getElementById(pageId).style.display = "flex";
-    }
-
-    function closeFullPage(pageId) {
-        document.getElementById(pageId).style.display = "none";
-    }
-
-    // 戰力轉盤旋轉邏輯
-    function spinWheel() {
-        if (isSpinning) return;
-        isSpinning = true;
+    // 更新介面數值
+    function updateHUD() {
+        document.getElementById('hudPower').innerText = power;
+        document.getElementById('modalPower').innerText = power;
+        document.getElementById('wheelCurrentPower').innerText = power;
         
-        const disc = document.getElementById("wheelDisc");
-        const randomDeg = 1800 + Math.floor(Math.random() * 360);
-        disc.style.transform = `rotate(${randomDeg}deg)`;
+        // 計算進度條 (每 100 戰力升一階)
+        const currentProgress = power % 100;
+        rank = Math.floor(power / 100);
+        points = currentProgress;
+        
+        document.getElementById('progressText').innerText = `${currentProgress}/100`;
+        document.getElementById('progressBar').style.width = `${currentProgress}%`;
+        document.getElementById('hudLevel').innerText = rank;
+        document.getElementById('rankPointText').innerText = `${rank} 階 ${points} 點`;
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openFullPage(id) {
+        closeModal('wheelSelectModal');
+        document.getElementById(id).style.display = 'flex';
+    }
+    function closeFullPage(id) { document.getElementById(id).style.display = 'none'; }
+
+    // 修改名字與性別
+    function updateName(val) {
+        if(val.trim() !== "") {
+            document.getElementById('hudName').innerText = val;
+        }
+    }
+    function setGender(gender) {
+        document.getElementById('hudGender').innerText = gender;
+        document.getElementById('stageCharacter').innerText = gender === '♂' ? '🧍‍♂️' : '🧍‍♀️';
+    }
+
+    // 選擇寵物頭像
+    function selectPet(petEmoji) {
+        document.getElementById('hudAvatar').innerText = petEmoji;
+        document.getElementById('stagePet').innerText = petEmoji;
+        closeModal('petSelectModal');
+    }
+
+    // 旋轉戰力轉盤 (圖11)
+    function spinWheel() {
+        if(isSpinning) return;
+        isSpinning = true;
+        const disc = document.getElementById('wheelDisc');
+        const randomRotate = 1800 + Math.floor(Math.random() * 360);
+        disc.style.transform = `rotate(${randomRotate}deg)`;
 
         setTimeout(() => {
             isSpinning = false;
-            const gainedPower = Math.floor(Math.random() * 300) + 50;
-            currentPower += gainedPower;
-            updatePowerDisplay();
-            alert(`🎉 恭喜！在戰力轉盤中獲得 +${gainedPower} 戰力！`);
+            const addPower = 100;
+            power += addPower;
+            updateHUD();
+            alert(`🎉 轉盤獲得 +${addPower} 戰力！`);
             disc.style.transition = 'none';
             disc.style.transform = 'rotate(0deg)';
             setTimeout(() => { disc.style.transition = 'transform 3s cubic-bezier(0.15, 0.99, 0.35, 1)'; }, 50);
         }, 3000);
     }
 
-    // 寵物扭蛋邏輯
-    function drawPet(count) {
-        totalDraws += count;
-        currentPower += count * 30;
-        updatePowerDisplay();
+    // 寵物扭蛋 (圖10)
+    function drawGacha(times) {
+        drawCount += times;
+        power += times * 20;
+        updateHUD();
+        
+        const pets = ['🐉', '🦄', '🦅'];
+        const randomPet = pets[Math.floor(Math.random() * pets.length)];
+        document.getElementById('gachaDisplay').innerText = randomPet;
+        document.getElementById('gachaDrawCount').innerText = `已抽次數：${drawCount}`;
 
-        const randomPet = petIcons[Math.floor(Math.random() * petIcons.length)];
-        document.getElementById("gachaPetImg").innerText = randomPet;
-        document.getElementById("drawCountText").innerText = `已抽次數：${totalDraws} 次`;
-
-        if (totalDraws >= 10) {
-            document.getElementById("milestoneText").innerText = "🎉 里程碑已達成：已解鎖 SAR 寵物碎片獎勵！";
+        if(drawCount >= 10) {
+            document.getElementById('milestoneText').innerText = "里程碑：已解鎖 SAR 獎勵！";
         }
-
-        alert(`✨ 成功抽取 ${count} 次！獲得寵物夥伴與 ${count * 30} 戰力！`);
+        alert(`✨ 成功抽取 ${times} 次！獲得 ${times * 20} 戰力！`);
     }
+
+    // 初始化
+    updateHUD();
 </script>
+
 </body>
 </html>
