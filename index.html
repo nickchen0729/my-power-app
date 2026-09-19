@@ -6,83 +6,113 @@
     <title>戰力手帳</title>
     <style>
         :root {
-            --card-bg: rgba(20, 30, 45, 0.75);
-            --modal-bg: #222b36;
+            --card-bg: rgba(20, 30, 45, 0.85);
+            --modal-bg: #1c232d;
             --text-main: #ffffff;
             --accent-cyan: #00f2fe;
             --accent-gold: #ffcc00;
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background: #111; color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { background: #000; color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 
-        /* 主容器 (藍天綠地背景) */
+        /* 主容器 */
         .game-container {
             width: 100%; max-width: 900px; height: 100vh; max-height: 650px;
             position: relative; overflow: hidden; border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.6); display: flex;
             flex-direction: column; justify-content: space-between;
-            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%); /* 備援藍天綠地背景 */
-            background-image: url('bg_male.png'), linear-gradient(180deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
-            background-size: cover; background-position: center;
         }
 
-        /* 頂部 HUD (主頁) */
+        /* 舞台圖層 */
+        .game-stage {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+            background: #111 url('bg_main.png') center/cover no-repeat;
+        }
+        .stage-layer { position: absolute; pointer-events: none; }
+        
+        /* 人物圖層：定位至左下角山頭 */
+        .character-layer {
+            left: 12%;
+            bottom: 15%;
+            width: 280px;
+            height: 480px;
+            background-size: contain;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+            transition: background-image 0.3s ease;
+            z-index: 2;
+        }
+        
+        /* 寵物圖層：定位至人物右側（中偏右草地上，保持距離） */
+        .pet-layer {
+            left: 25%;
+            bottom: 12%;
+            width: 120px;
+            height: 120px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+        .pet-layer img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* 頂部 HUD */
         .top-hud { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; z-index: 10; }
         .user-profile-card {
-            background: var(--card-bg); backdrop-filter: blur(8px); padding: 10px 14px;
+            background: var(--card-bg); backdrop-filter: blur(8px); padding: 8px 14px;
             border-radius: 12px; display: flex; align-items: center; gap: 12px;
             border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
         }
-        .avatar-box { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 26px; border: 2px solid var(--accent-gold); }
+        .avatar-box { width: 44px; height: 44px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent-gold); overflow: hidden; }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         .user-info { display: flex; flex-direction: column; gap: 2px; }
         .setting-btn { width: 40px; height: 40px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-
-        /* 中間建模人物與寵物 */
-        .center-stage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -40%); display: flex; align-items: flex-end; gap: 20px; z-index: 5; }
-        .character-avatar { font-size: 100px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)); }
-        .pet-avatar { font-size: 50px; animation: bounce 2s infinite ease-in-out; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         /* 底部 HUD */
         .bottom-hud { display: flex; justify-content: space-between; align-items: flex-end; padding: 20px; z-index: 10; }
         .btn-main { background: var(--card-bg); border: 1px solid var(--accent-cyan); color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; backdrop-filter: blur(6px); }
         .quick-wheels { display: flex; gap: 12px; }
         .circle-btn {
-            width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.6);
-            border: 2px solid var(--accent-gold); color: white; font-size: 12px;
+            width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 2px solid var(--accent-gold); color: white; font-size: 11px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
         }
 
         /* 彈窗遮罩 */
         .modal-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.75); display: none; justify-content: center;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center;
             align-items: center; z-index: 100; backdrop-filter: blur(4px);
         }
         .modal-card {
             background: var(--modal-bg); border-radius: 16px; padding: 20px;
-            width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.2); position: relative;
+            width: 90%; max-width: 420px; max-height: 85vh; overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2); position: relative;
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; }
         .modal-title { font-size: 16px; font-weight: bold; color: var(--accent-cyan); }
         .btn-close { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; }
 
-        /* 全螢幕頁面 (戰力轉盤 & 寵物扭蛋) */
+        /* 全螢幕頁面 */
         .full-page-view {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #181d24; z-index: 90; display: none; flex-direction: column;
+            background: #12161f; z-index: 90; display: none; flex-direction: column;
             justify-content: space-between; padding: 20px; box-sizing: border-box;
         }
         .page-header { display: flex; justify-content: space-between; align-items: center; }
         .btn-back { background: #e74c3c; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 戰力轉盤 (包含文字刻度) */
+        /* 轉盤樣式 */
         .wheel-wrapper { position: relative; width: 260px; height: 260px; margin: 15px auto; }
         .wheel-disc {
             width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent-gold);
-            position: relative; overflow: hidden; transition: transform 3s cubic-bezier(0.15, 0.99, 0.35, 1);
-            background: conic-gradient(#ff7675 0 60deg, #fdcb6e 60deg 120deg, #6c5ce7 120deg 180deg, #00b894 180deg 240deg, #0984e3 240deg 300deg, #e17055 300deg 360deg);
+            position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0.99, 0.35, 1);
+            background: conic-gradient(#e74c3c 0 90deg, #f1c40f 90deg 180deg, #3498db 180deg 270deg, #9b59b6 270deg 360deg);
         }
         .wheel-pointer {
             position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -92,91 +122,81 @@
         .wheel-label {
             position: absolute; width: 100%; height: 100%; text-align: center;
             font-size: 13px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
-            padding-top: 15px; transform-origin: 50% 50%;
+            padding-top: 20px; transform-origin: 50% 50%;
         }
 
-        /* 寵物扭蛋展示 */
-        .gacha-box { width: 160px; height: 160px; margin: 15px auto; background: rgba(255,255,255,0.05); border: 2px solid var(--accent-cyan); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 70px; }
-        .btn-draw { background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #000; margin: 0 5px; }
+        /* 扭蛋展示區 */
+        .gacha-box { width: 140px; height: 140px; margin: 10px auto; background: rgba(255,255,255,0.05); border: 2px solid var(--accent-cyan); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        .btn-draw { background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 10px 24px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #000; margin: 0 5px; }
 
-        /* 選單與按鈕設定 */
+        /* 通用選單 */
         .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .input-text { background: #111; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 6px; width: 140px; }
-        .pet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .pet-grid-item { background: #111; border: 1px solid #444; border-radius: 6px; padding: 8px; text-align: center; font-size: 20px; cursor: pointer; }
-        .pet-grid-item.locked { opacity: 0.3; }
+        .input-text { background: #111; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 6px; width: 130px; }
+        .pet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
+        .pet-grid-item { background: #111; border: 1px solid #444; border-radius: 6px; padding: 8px; text-align: center; font-size: 20px; cursor: pointer; position: relative; }
+        .pet-grid-item.active { border-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
+        .pet-grid-item.locked { opacity: 0.25; filter: grayscale(100%); cursor: not-allowed; }
         .progress-bar-bg { width: 100%; background: #333; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 4px; }
-        .progress-bar-fill { width: 50%; background: var(--accent-cyan); height: 100%; }
+        .progress-bar-fill { width: 0%; background: var(--accent-cyan); height: 100%; transition: width 0.3s; }
+        .currency-bar { display: flex; gap: 15px; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
 <div class="game-container">
-    <!-- 頂部 HUD (對應圖12) -->
+    <!-- 舞台背景與疊加圖層 -->
+    <div class="game-stage">
+        <div class="stage-layer character-layer" id="stageCharacter"></div>
+        <div class="stage-layer pet-layer" id="stagePet">🐱</div>
+    </div>
+
+    <!-- 頂部 HUD -->
     <div class="top-hud">
-        <!-- 點擊頭像打開小彈窗 (圖13/14/15) -->
         <div class="user-profile-card" onclick="openModal('avatarModal')">
-            <div class="avatar-box" id="hudAvatar">🏆</div>
+            <div class="avatar-box" id="hudAvatar">🐱</div>
             <div class="user-info">
-                <div style="font-weight:bold;"><span id="hudName">Nickchen</span> <span id="hudGender">♂</span></div>
-                <div style="font-size:12px; color:var(--accent-cyan);">Level <span id="hudLevel">1</span> (戰力: <span id="hudPower">1000</span>)</div>
+                <div style="font-weight:bold;"><span id="hudName">Nickchen</span> <span id="hudGender">♀</span></div>
+                <div style="font-size:12px; color:var(--accent-cyan);">Level <span id="hudLevel">0</span> (戰力: <span id="hudPower">0</span>)</div>
             </div>
         </div>
-        <!-- 設定圖標 (圖12) -->
         <div class="setting-btn" onclick="openModal('settingsModal')">⚙️</div>
     </div>
 
-    <!-- 中間建模人物與寵物 (圖12) -->
-    <div class="center-stage">
-        <div class="character-avatar" id="stageCharacter">🧍‍♂️</div>
-        <div class="pet-avatar" id="stagePet">🐉</div>
-    </div>
-
-    <!-- 底部 HUD (圖12) -->
+    <!-- 底部 HUD -->
     <div class="bottom-hud">
-        <button class="btn-main" onclick="alert('待完成事項：\n1. 每日登入\n2. 戰力轉盤 1 次\n3. 寵物扭蛋 1 次')">待完成事項</button>
+        <button class="btn-main" onclick="addDemoScore()">+15 分數 (測試用)</button>
         <div class="quick-wheels">
-            <!-- 點擊開啟轉盤選擇彈窗 (圖9) -->
             <div class="circle-btn" onclick="openModal('wheelSelectModal')">🎡<br>轉盤</div>
             <div class="circle-btn" onclick="openModal('settingsModal')">⚙️<br>設定</div>
         </div>
     </div>
 
-    <!-- [圖9] 點開轉盤小彈窗 -->
+    <!-- 轉盤選擇彈窗 -->
     <div class="modal-overlay" id="wheelSelectModal">
         <div class="modal-card" style="text-align: center;">
             <div class="modal-header">
-                <div class="modal-title">點開轉盤 (小彈窗)</div>
+                <div class="modal-title">轉盤選擇</div>
                 <button class="btn-close" onclick="closeModal('wheelSelectModal')">✕</button>
             </div>
-            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('powerWheelPage')">⚔️ 戰力轉盤</button>
-            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('petGachaPage')">🐾 寵物扭蛋</button>
+            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('powerWheelPage')">🎲 戰力卡牌轉盤</button>
+            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('petGachaPage')">🐾 70種寵物扭蛋</button>
         </div>
     </div>
 
-    <!-- [圖12] 設定小彈窗 -->
+    <!-- 設定彈窗 -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="modal-title">點開設定 (小彈窗)</div>
+                <div class="modal-title">設定</div>
                 <button class="btn-close" onclick="closeModal('settingsModal')">✕</button>
             </div>
-            <div class="menu-row">
-                <span>音量 🔊</span>
-                <input type="range" min="0" max="100" value="80">
-            </div>
-            <div class="menu-row">
-                <span>音效 🎵</span>
-                <input type="range" min="0" max="100" value="80">
-            </div>
-            <div class="menu-row" style="margin-top: 10px;">
-                <span>創立時間</span>
-                <span style="color: #aaa; font-size: 13px;">2026 / 09 / 19</span>
-            </div>
+            <div class="menu-row"><span>音量 🔊</span><input type="range" min="0" max="100" value="80"></div>
+            <div class="menu-row"><span>音效 🎵</span><input type="range" min="0" max="100" value="80"></div>
+            <div class="menu-row" style="margin-top: 10px;"><span>創立時間</span><span style="color: #aaa; font-size: 13px;">2026 / 09 / 19</span></div>
         </div>
     </div>
 
-    <!-- [圖13/14/15] 點開頭像小彈窗 -->
+    <!-- 頭像/個人彈窗 -->
     <div class="modal-overlay" id="avatarModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -184,7 +204,7 @@
                 <button class="btn-close" onclick="closeModal('avatarModal')">✕</button>
             </div>
             <div class="menu-row">
-                <span>設定頭像 (擁有的寵物)</span>
+                <span>設定頭像 (已解鎖寵物)</span>
                 <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="openModal('petSelectModal')">選擇</button>
             </div>
             <div class="menu-row">
@@ -194,197 +214,426 @@
             <div class="menu-row">
                 <span>性別設定</span>
                 <div>
-                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♂')">♂</button>
-                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♀')">♀</button>
+                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♂')">♂ (狗狗)</button>
+                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♀')">♀ (貓貓)</button>
                 </div>
             </div>
             <div style="margin-top: 12px;">
                 <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                    <span>戰力：<b id="modalPower">1000</b></span>
-                    <span>進度：<b id="progressText">50/100</b></span>
+                    <span>當前戰力：<b id="modalPower">0</b></span>
+                    <span>階級進度：<b id="progressText">0/100</b></span>
                 </div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progressBar"></div>
-                </div>
-                <div style="font-size: 11px; color: #888; margin-top: 4px; text-align: right;">此階至下一階的距離</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                <div style="font-size: 11px; color: #888; margin-top: 4px; text-align: right;">每 100 戰力升一階</div>
             </div>
         </div>
     </div>
 
-    <!-- 寵物選擇九宮格小彈窗 (對應圖13/14/15右側) -->
+    <!-- 寵物選擇彈窗 -->
     <div class="modal-overlay" id="petSelectModal">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="modal-title">選擇頭像 (依稀有度由上至下)</div>
+                <div class="modal-title">選擇頭像 (70種寵物庫)</div>
                 <button class="btn-close" onclick="closeModal('petSelectModal')">✕</button>
             </div>
-            <div style="font-size: 11px; color: #aaa;">亮色為擁有，灰色為未解鎖</div>
-            <div class="pet-grid">
-                <div class="pet-grid-item" onclick="selectPet('🐉')">🐉</div>
-                <div class="pet-grid-item" onclick="selectPet('🦄')">🦄</div>
-                <div class="pet-grid-item" onclick="selectPet('🦅')">🦅</div>
-                <div class="pet-grid-item locked">🐺</div>
-                <div class="pet-grid-item locked">🦁</div>
-                <div class="pet-grid-item locked">🐱</div>
-                <div class="pet-grid-item locked">🐶</div>
-                <div class="pet-grid-item locked">🦊</div>
-                <div class="pet-grid-item locked">🐰</div>
-                <div class="pet-grid-item locked">🐼</div>
-            </div>
+            <div style="font-size: 11px; color: #aaa; margin-bottom: 8px;">亮色為已獲得，灰色為未解鎖 (點擊可立即替換)</div>
+            <div class="pet-grid" id="petGrid"></div>
         </div>
     </div>
 
-    <!-- [圖11] 戰力轉盤頁面 -->
+    <!-- 戰力轉盤頁面 -->
     <div class="full-page-view" id="powerWheelPage">
         <div class="page-header">
-            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="alert('機率列表：\n+50戰力: 40%\n+100戰力: 30%\n+200戰力: 18%\n+300戰力: 8%\n暴擊+500: 4%')">機率列表</button>
-            <div style="font-size: 18px; font-weight: bold; color: var(--accent-gold);">戰力轉盤</div>
+            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showWheelProbability()">機率與Buff池</button>
+            <div style="font-size: 18px; font-weight: bold; color: var(--accent-gold);">戰力卡牌轉盤</div>
             <div></div>
         </div>
 
         <div style="text-align: center;">
-            <!-- 圖11：目前戰力 -->
-            <div style="font-size: 16px; margin-bottom: 10px;">目前戰力：<span id="wheelCurrentPower">1000</span></div>
-            
+            <div class="currency-bar" style="justify-content: center; margin-bottom: 10px;">
+                <span>🎯 分數：<b id="wheelScore">0</b></span>
+                <span>💎 點數：<b id="wheelPoints" style="color:var(--accent-gold);">0</b></span>
+                <span>⚔️ 戰力：<b id="wheelCurrentPower">0</b></span>
+            </div>
+
             <div class="wheel-wrapper">
                 <div class="wheel-pointer"></div>
                 <div class="wheel-disc" id="wheelDisc">
-                    <div class="wheel-label" style="transform: rotate(30deg);">+50</div>
-                    <div class="wheel-label" style="transform: rotate(90deg);">+100</div>
-                    <div class="wheel-label" style="transform: rotate(150deg);">+200</div>
-                    <div class="wheel-label" style="transform: rotate(210deg);">+50</div>
-                    <div class="wheel-label" style="transform: rotate(270deg);">+300</div>
-                    <div class="wheel-label" style="transform: rotate(330deg);">+500</div>
+                    <div class="wheel-label" style="transform: rotate(45deg);">🏆 SSR (1%)</div>
+                    <div class="wheel-label" style="transform: rotate(135deg);">🟣 SR (10%)</div>
+                    <div class="wheel-label" style="transform: rotate(225deg);">🔵 R (50%)</div>
+                    <div class="wheel-label" style="transform: rotate(315deg);">⚪ N (39%)</div>
                 </div>
             </div>
 
-            <button class="btn-draw" style="margin-top: 15px; padding: 10px 30px;" onclick="spinWheel()">開始旋轉</button>
+            <div style="font-size: 12px; color: #aaa; margin-top: 5px;">每次抽獎消耗 <b>3 點數</b> (5分數 = 1點數)</div>
+            <button class="btn-draw" style="margin-top: 10px; padding: 10px 30px;" onclick="spinWheel()">開始抽卡 (消耗3點)</button>
         </div>
 
-        <!-- 圖11：右下角階數與點數 + 返回主頁 -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div style="font-size: 14px; color: var(--accent-gold);" id="rankPointText">1 階 0 點</div>
+            <div style="font-size: 14px; color: var(--accent-gold);" id="rankPointText">0 階 0 點</div>
             <button class="btn-back" onclick="closeFullPage('powerWheelPage')">↩ 返回主頁</button>
         </div>
     </div>
 
-    <!-- [圖10] 寵物扭蛋頁面 -->
+    <!-- 寵物扭蛋頁面 -->
     <div class="full-page-view" id="petGachaPage">
         <div class="page-header">
-            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="alert('機率列表：\nSAR: 2%\nAR: 8%\nSR: 30%\nR: 60%')">機率列表</button>
-            <div style="font-size: 18px; font-weight: bold; color: var(--accent-cyan);">寵物扭蛋</div>
+            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showGachaProbability()">完整機率與70寵物</button>
+            <div style="font-size: 18px; font-weight: bold; color: var(--accent-cyan);">寵物扭蛋 (70種)</div>
             <div></div>
         </div>
 
         <div style="text-align: center;">
-            <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">每日一張抽獎券 + 里程碑 (配合戰力)</div>
+            <div class="currency-bar" style="justify-content: center; margin-bottom: 10px;">
+                <span>🎟️ 扭蛋券：<b id="gachaTickets" style="color:var(--accent-cyan);">1</b> 張</span>
+                <span>🐾 搜集進度：<b id="ownedPetsCount">2</b> / 70</span>
+            </div>
             
-            <!-- 圖10：寵物圖片 (SAR - AR) 輪播 -->
-            <div class="gacha-box" id="gachaDisplay">🐉</div>
-            <div style="font-size: 12px; color: var(--accent-gold); margin-bottom: 10px;">寵物圖片 (SAR - AR) 輪播備用</div>
+            <div class="gacha-box" id="gachaDisplayBox">
+                <div style="font-size: 55px;" id="gachaDisplayIcon">🐱</div>
+            </div>
+            <div style="font-size: 12px; color: var(--accent-gold); font-weight: bold; margin-top: 5px;" id="gachaDisplayName">暗夜獵手黑貓 (R)</div>
+            <div style="font-size: 11px; color: #aaa; margin-bottom: 10px;">寵物僅供收藏/頭像，<b>不增加戰力</b></div>
 
             <div style="font-size: 14px; margin-bottom: 10px;" id="gachaDrawCount">已抽次數：0</div>
 
             <div>
-                <button class="btn-draw" onclick="drawGacha(1)">抽 1 次</button>
-                <button class="btn-draw" onclick="drawGacha(10)">抽 10 次</button>
+                <button class="btn-draw" onclick="drawGacha(1)">抽 1 次 (消耗1券)</button>
             </div>
         </div>
 
-        <!-- 圖10：里程碑與返回主頁 -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div style="font-size: 13px; color: #aaa;" id="milestoneText">里程碑：10 次解鎖 SAR 獎勵</div>
+            <div style="font-size: 12px; color: #aaa;" id="milestoneText">里程碑：累積抽卡解鎖特殊稱號</div>
             <button class="btn-back" onclick="closeFullPage('petGachaPage')">↩ 返回主頁</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 全域變數狀態
-    let power = 1000;
+    // 全域數據狀態
+    let power = 0;
+    let score = 30;
+    let points = 6;
+    let tickets = 3;
     let drawCount = 0;
-    let rank = 1;
-    let points = 0;
+    let currentGender = '♀'; // 預設女生
+    let currentRotation = 0;
     let isSpinning = false;
 
-    // 更新介面數值
+    // 🐾 預設已解鎖包含柴犬(R-03)與黑貓(R-02)
+    let ownedPets = ["R-03", "R-02"]; 
+    let currentSelectedPetCode = "R-02"; // 預設女生配黑貓
+
+    // 🏆 戰力 Buff 卡牌獎池
+    const buffPool = {
+        SSR: [
+            { name: "神聖戰力聖杯", base: 1000, boosted: 3000, desc: "戰力直接大爆發！" },
+            { name: "時光逆轉沙漏", base: 500, boosted: 1000, desc: "補救目標並獲得雙倍戰力" },
+            { name: "永恆王者王冠", base: 800, boosted: 1600, desc: "未來7天戰力獲取翻倍" }
+        ],
+        SR: [
+            { name: "超額爆發力", base: 300, boosted: 600, desc: "超額目標額外加成" },
+            { name: "目標強化劑", base: 250, boosted: 500, desc: "新目標基礎得分提升" },
+            { name: "連續執念護符", base: 350, boosted: 700, desc: "連續完成觸發額外大獎" }
+        ],
+        R: [
+            { name: "高分強效光環", base: 150, boosted: 300, desc: "極光 Buff 加成" },
+            { name: "經驗加速魔藥", base: 200, boosted: 400, desc: "狂暴 Buff 雙倍" },
+            { name: "專注永恆藥水", base: 180, boosted: 360, desc: "24小時戰力+20%" },
+            { name: "進度推進齒輪", base: 160, boosted: 320, desc: "長程目標進度推進" },
+            { name: "早鳥衝刺羽毛", base: 100, boosted: 200, desc: "早鳥目標獎勵" },
+            { name: "戰力連擊卡", base: 150, boosted: 300, desc: "目標疊加連擊" }
+        ],
+        N: [
+            { name: "基礎戰力結晶", base: 100, boosted: 300 },
+            { name: "智力藍水晶", base: 90, boosted: 270 },
+            { name: "專注小軟木", base: 85, boosted: 255 },
+            { name: "體力微光微粒", base: 80, boosted: 240 },
+            { name: "敏捷風之碎片", base: 80, boosted: 240 },
+            { name: "晨曦露珠", base: 75, boosted: 225 },
+            { name: "意志小石塊", base: 70, boosted: 210 },
+            { name: "幸運微塵", base: 60, boosted: 200 },
+            { name: "冒險者銅幣", base: 50, boosted: 180 }
+        ]
+    };
+
+    // 🐾 完整 70 種寵物資料庫
+    const petDatabase = {
+        SC: { rate: 0.331, items: [{ name: "創世星穹幻龍", icon: "🐉", code: "SC-01", img: "pet_sc_01.png" }] },
+        SAR: { rate: 0.889, items: [
+            { name: "裂空風暴巨鷹", icon: "🦅", code: "SAR-01", img: "pet_sar_01.png" },
+            { name: "九尾幽火天狐", icon: "🦊", code: "SAR-02", img: "pet_sar_02.png" },
+            { name: "深海鯨歌巨獸", icon: "🐋", code: "SAR-03", img: "pet_sar_03.png" }
+        ]},
+        AR: { rate: 1.412, items: [
+            { name: "夢境純白獨角獸", icon: "🦄", code: "AR-01", img: "pet_ar_01.png" },
+            { name: "烈陽黃金聖獅", icon: "🦁", code: "AR-02", img: "pet_ar_02.png" },
+            { name: "疾風蒼狼皇", icon: "🐺", code: "AR-03", img: "pet_ar_03.png" },
+            { name: "彩虹霓光孔雀", icon: "🦚", code: "AR-04", img: "pet_ar_04.png" },
+            { name: "永恆睿智神鳥", icon: "🦉", code: "AR-05", img: "pet_ar_05.png" }
+        ]},
+        SSR: { rate: 3.114, items: [
+            { name: "泰坦岩甲熊", icon: "🐻", code: "SSR-01", img: "pet_ssr_01.png" },
+            { name: "噬魂紫霧蛇", icon: "🐍", code: "SSR-02", img: "pet_ssr_02.png" },
+            { name: "聖光森林靈鹿", icon: "🦌", code: "SSR-03", img: "pet_ssr_03.png" },
+            { name: "幻光水晶蝶", icon: "🦋", code: "SSR-04", img: "pet_ssr_04.png" },
+            { name: "深淵巨齒鯊", icon: "🦈", code: "SSR-05", img: "pet_ssr_05.png" },
+            { name: "赤焰毒蠍王", icon: "🦂", code: "SSR-06", img: "pet_ssr_06.png" },
+            { name: "鋼鐵金剛王", icon: "🦍", code: "SSR-07", img: "pet_ssr_07.png" }
+        ]},
+        SR: { rate: 5.667, items: [
+            { name: "猛虎戰士", icon: "🐅", code: "SR-01", img: "pet_sr_01.png" },
+            { name: "迅捷黑豹", icon: "🐆", code: "SR-02", img: "pet_sr_02.png" },
+            { name: "獵空蒼鷹", icon: "🦅", code: "SR-03", img: "pet_sr_03.png" },
+            { name: "沼澤巨鱷", icon: "🐊", code: "SR-04", img: "pet_sr_04.png" },
+            { name: "深海巨爪章魚", icon: "🐙", code: "SR-05", img: "pet_sr_05.png" },
+            { name: "重裝鐵甲犀牛", icon: "🦏", code: "SR-06", img: "pet_sr_06.png" },
+            { name: "荒漠領航駱駝", icon: "🐪", code: "SR-07", img: "pet_sr_07.png" }
+        ]},
+        R: { rate: 25.000, items: [
+            { name: "冰原雪狼", icon: "🐺", code: "R-01", img: "pet_r_01.png" }, 
+            { name: "暗夜獵手黑貓", icon: "🐱", code: "R-02", img: "pet_r_02.png" },
+            { name: "忠誠柴犬戰士", icon: "🐕", code: "R-03", img: "pet_r_03.png" }, 
+            { name: "淘氣小浣熊", icon: "🦝", code: "R-04", img: "pet_r_04.png" },
+            { name: "淘氣海獺", icon: "🦦", code: "R-05", img: "pet_r_05.png" }, { name: "刺蝟騎士", icon: "🦔", code: "R-06", img: "pet_r_06.png" },
+            { name: "火烈鳥舞者", icon: "🦩", code: "R-07", img: "pet_r_07.png" }, { name: "極地特攻企鵝", icon: "🐧", code: "R-08", img: "pet_r_08.png" },
+            { name: "暗夜吸血蝙蝠", icon: "🦇", code: "R-09", img: "pet_r_09.png" }, { name: "疾風鴕鳥", icon: "🦩", code: "R-10", img: "pet_r_10.png" },
+            { name: "沉思樹懶", icon: "🦥", code: "R-11", img: "pet_r_11.png" }, { name: "鑽地鼴鼠", icon: "🦦", code: "R-12", img: "pet_r_12.png" },
+            { name: "擬態變色龍", icon: "🦎", code: "R-13", img: "pet_r_13.png" }, { name: "飛海蝠魟", icon: "🐟", code: "R-14", img: "pet_r_14.png" },
+            { name: "療癒水母", icon: "🪼", code: "R-15", img: "pet_r_15.png" }
+        ]},
+        N: { rate: 63.587, items: [
+            { name: "金毛小狗", icon: "🐕", code: "N-01", img: "pet_n_01.png" }, { name: "花斑小貓", icon: "🐈", code: "N-02", img: "pet_n_02.png" },
+            { name: "軟綿小白兔", icon: "🐰", code: "N-03", img: "pet_n_03.png" }, { name: "倉鼠吃貨", icon: "🐹", code: "N-04", img: "pet_n_04.png" },
+            { name: "黃小雞", icon: "🐥", code: "N-05", img: "pet_n_05.png" }, { name: "呱呱小鴨", icon: "🦆", code: "N-06", img: "pet_n_06.png" },
+            { name: "森林小雀", icon: "🐦", code: "N-07", img: "pet_n_07.png" }, { name: "草地青蛙", icon: "🐸", code: "N-08", img: "pet_n_08.png" },
+            { name: "悠閒小烏龜", icon: "🐢", code: "N-09", img: "pet_n_09.png" }, { name: "松果松鼠", icon: "🐿️", code: "N-10", img: "pet_n_10.png" },
+            { name: "小小刺蝟", icon: "🦔", code: "N-11", img: "pet_n_11.png" }, { name: "粉紅小豬", icon: "🐖", code: "N-12", img: "pet_n_12.png" },
+            { name: "雲朵小綿羊", icon: "🐑", code: "N-13", img: "pet_n_13.png" }, { name: "花斑乳牛", icon: "🐮", code: "N-14", img: "pet_n_14.png" },
+            { name: "奔跑小木馬", icon: "🐴", code: "N-15", img: "pet_n_15.png" }, { name: "山地小山羊", icon: "🐐", code: "N-16", img: "pet_n_16.png" },
+            { name: "頑皮小猴子", icon: "🐒", code: "N-17", img: "pet_n_17.png" }, { name: "報時公雞", icon: "🐓", code: "N-18", img: "pet_n_18.png" },
+            { name: "和平白鴿", icon: "🕊️", code: "N-19", img: "pet_n_19.png" }, { name: "學舌鸚鵡", icon: "🦜", code: "N-20", img: "pet_n_20.png" },
+            { name: "海灘小螃蟹", icon: "🦀", code: "N-21", img: "pet_n_21.png" }, { name: "彈跳小蝦", icon: "🦐", code: "N-22", img: "pet_n_22.png" },
+            { name: "慢吞吞蝸牛", icon: "🐌", code: "N-23", img: "pet_n_23.png" }, { name: "勤勞小蜜蜂", icon: "🐝", code: "N-24", img: "pet_n_24.png" },
+            { name: "七星瓢蟲", icon: "🐞", code: "N-25", img: "pet_n_25.png" }, { name: "溪流蜻蜓", icon: "🦗", code: "N-26", img: "pet_n_26.png" },
+            { name: "夏日知了", icon: "🪰", code: "N-27", img: "pet_n_27.png" }, { name: "草原羊駝", icon: "🦙", code: "N-28", img: "pet_n_28.png" },
+            { name: "靈巧灰鼠", icon: "🐭", code: "N-29", img: "pet_n_29.png" }, { name: "守衛大白鵝", icon: "🦢", code: "N-30", img: "pet_n_30.png" },
+            { name: "小水獺", icon: "🦦", code: "N-31", img: "pet_n_31.png" }, { name: "萌萌小鳥崽", icon: "🐣", code: "N-32", img: "pet_n_32.png" }
+        ]}
+    };
+
+    function getPetByCode(code) {
+        for (let rarity in petDatabase) {
+            let found = petDatabase[rarity].items.find(p => p.code === code);
+            if(found) return found;
+        }
+        return petDatabase.R.items[1]; // 預設黑貓
+    }
+
     function updateHUD() {
         document.getElementById('hudPower').innerText = power;
         document.getElementById('modalPower').innerText = power;
         document.getElementById('wheelCurrentPower').innerText = power;
-        
-        // 計算進度條 (每 100 戰力升一階)
+
+        const level = Math.floor(power / 100);
         const currentProgress = power % 100;
-        rank = Math.floor(power / 100);
-        points = currentProgress;
-        
+        document.getElementById('hudLevel').innerText = level;
         document.getElementById('progressText').innerText = `${currentProgress}/100`;
         document.getElementById('progressBar').style.width = `${currentProgress}%`;
-        document.getElementById('hudLevel').innerText = rank;
-        document.getElementById('rankPointText').innerText = `${rank} 階 ${points} 點`;
+        document.getElementById('rankPointText').innerText = `${level} 階 ${currentProgress} 點`;
+
+        points = Math.floor(score / 5);
+        document.getElementById('wheelScore').innerText = score;
+        document.getElementById('wheelPoints').innerText = points;
+        document.getElementById('gachaTickets').innerText = tickets;
+        document.getElementById('ownedPetsCount').innerText = ownedPets.length;
+
+        updateCharacterLayer();
+        updatePetLayer();
+        renderPetGrid();
+    }
+
+    function updateCharacterLayer() {
+        const charLayer = document.getElementById('stageCharacter');
+        const imgName = currentGender === '♂' ? 'char_male.png' : 'char_female.png';
+        charLayer.style.backgroundImage = `url('${imgName}')`;
+    }
+
+    function updatePetLayer() {
+        const petObj = getPetByCode(currentSelectedPetCode);
+        const stagePet = document.getElementById('stagePet');
+        const hudAvatar = document.getElementById('hudAvatar');
+
+        const img = new Image();
+        img.src = petObj.img;
+        img.onload = () => {
+            stagePet.innerHTML = `<img src="${petObj.img}" alt="${petObj.name}">`;
+            hudAvatar.innerHTML = `<img src="${petObj.img}" alt="${petObj.name}">`;
+        };
+        img.onerror = () => {
+            stagePet.innerHTML = petObj.icon;
+            hudAvatar.innerHTML = petObj.icon;
+        };
+    }
+
+    function renderPetGrid() {
+        const grid = document.getElementById('petGrid');
+        grid.innerHTML = "";
+
+        ['SC', 'SAR', 'AR', 'SSR', 'SR', 'R', 'N'].forEach(rarity => {
+            petDatabase[rarity].items.forEach(pet => {
+                const isOwned = ownedPets.includes(pet.code);
+                const isSelected = currentSelectedPetCode === pet.code;
+
+                const item = document.createElement('div');
+                item.className = `pet-grid-item ${isOwned ? '' : 'locked'} ${isSelected ? 'active' : ''}`;
+                item.innerText = pet.icon;
+                item.title = `[${pet.code}] ${pet.name} (${rarity})`;
+
+                if(isOwned) {
+                    item.onclick = () => selectPet(pet.code);
+                }
+                grid.appendChild(item);
+            });
+        });
+    }
+
+    function addDemoScore() {
+        score += 15;
+        updateHUD();
+        alert("🎉 獲得 +15 分數！(可轉換為 3 點數)");
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function openFullPage(id) {
-        closeModal('wheelSelectModal');
-        document.getElementById(id).style.display = 'flex';
-    }
+    function openFullPage(id) { closeModal('wheelSelectModal'); document.getElementById(id).style.display = 'flex'; }
     function closeFullPage(id) { document.getElementById(id).style.display = 'none'; }
 
-    // 修改名字與性別
-    function updateName(val) {
-        if(val.trim() !== "") {
-            document.getElementById('hudName').innerText = val;
-        }
-    }
+    function updateName(val) { if(val.trim() !== "") document.getElementById('hudName').innerText = val; }
+    
+    // 性別連動預設寵物 (男生=柴犬, 女生=黑貓)
     function setGender(gender) {
+        currentGender = gender;
         document.getElementById('hudGender').innerText = gender;
-        document.getElementById('stageCharacter').innerText = gender === '♂' ? '🧍‍♂️' : '🧍‍♀️';
+        if (gender === '♂') {
+            currentSelectedPetCode = "R-03"; // 🐕 忠誠柴犬戰士
+        } else {
+            currentSelectedPetCode = "R-02"; // 🐱 暗夜獵手黑貓
+        }
+        updateHUD();
     }
 
-    // 選擇寵物頭像
-    function selectPet(petEmoji) {
-        document.getElementById('hudAvatar').innerText = petEmoji;
-        document.getElementById('stagePet').innerText = petEmoji;
+    // 選擇/切換寵物
+    function selectPet(petCode) {
+        currentSelectedPetCode = petCode;
+        updateHUD();
         closeModal('petSelectModal');
     }
 
-    // 旋轉戰力轉盤 (圖11)
+    // 戰力轉盤邏輯
     function spinWheel() {
         if(isSpinning) return;
+        if(points < 3) {
+            alert("❌ 點數不足！抽 1 次卡牌轉盤需要 3 點數 (5分數 = 1點數)。");
+            return;
+        }
+
+        score -= 15;
+        updateHUD();
+
         isSpinning = true;
         const disc = document.getElementById('wheelDisc');
-        const randomRotate = 1800 + Math.floor(Math.random() * 360);
-        disc.style.transform = `rotate(${randomRotate}deg)`;
+
+        const rand = Math.random() * 100;
+        let quality = 'N';
+        let targetAngle = 315;
+
+        if (rand < 1) { quality = 'SSR'; targetAngle = 45; }
+        else if (rand < 11) { quality = 'SR'; targetAngle = 135; }
+        else if (rand < 61) { quality = 'R'; targetAngle = 225; }
+
+        const extraRounds = 5 * 360;
+        currentRotation += extraRounds + (360 - (targetAngle % 360)) + (Math.random() * 20 - 10);
+        disc.style.transform = `rotate(${currentRotation}deg)`;
 
         setTimeout(() => {
             isSpinning = false;
-            const addPower = 100;
-            power += addPower;
+            const pool = buffPool[quality];
+            const reward = pool[Math.floor(Math.random() * pool.length)];
+
+            const isBoosted = Math.random() < 0.1;
+            const gainedPower = isBoosted ? reward.boosted : reward.base;
+            
+            power += gainedPower;
             updateHUD();
-            alert(`🎉 轉盤獲得 +${addPower} 戰力！`);
-            disc.style.transition = 'none';
-            disc.style.transform = 'rotate(0deg)';
-            setTimeout(() => { disc.style.transition = 'transform 3s cubic-bezier(0.15, 0.99, 0.35, 1)'; }, 50);
-        }, 3000);
+
+            let msg = `🎲 抽卡結果：[${quality}] ${reward.name}！\n`;
+            if(isBoosted) msg += `🔥 觸發【極稀有增幅】！\n`;
+            msg += `⚔️ 戰力 +${gainedPower}`;
+            if(reward.desc) msg += ` (${reward.desc})`;
+
+            alert(msg);
+        }, 4000);
     }
 
-    // 寵物扭蛋 (圖10)
+    function showWheelProbability() {
+        alert("🎲 戰力卡牌轉盤機率與 Buff 表：\n\n🏆 SSR (1%)：\n - 神聖戰力聖杯 (+1000 / 增幅 +3000)\n - 時光逆轉沙漏\n - 永恆王者王冠\n\n🟣 SR (10%)：\n - 超額爆發力、目標強化劑、連續執念護符\n\n🔵 R (50%)：\n - 經驗加速魔藥、專注藥水、早鳥羽毛等 10 種戰術 Buff\n\n⚪ N (39%)：\n - 基礎戰力結晶 (+100 / 增幅 +300) 等 10 種結晶");
+    }
+
+    function showGachaProbability() {
+        let text = "🐾 70 種寵物完整抽卡機率表：\n\n";
+        text += "👑 SC 階級 (0.331%) - 1張：創世星穹幻龍 🐉\n\n";
+        text += "✨ SAR 階級 (0.889%) - 3張：裂空風暴巨鷹 🦅, 九尾天狐 🦊...\n\n";
+        text += "🌟 AR 階級 (1.412%) - 5張：獨角獸 🦄, 聖獅 🦁...\n\n";
+        text += "🔥 SSR 階級 (3.114%) - 7張：泰坦岩甲熊 🐻...\n\n";
+        text += "💎 SR 階級 (5.667%) - 7張：猛虎戰士 🐅...\n\n";
+        text += "⚔️ R 階級 (25.000%) - 15張：冰原雪狼 🐺...\n\n";
+        text += "🐾 N 階級 (63.587%) - 32張：金毛 🐕, 小貓 🐈...\n\n";
+        text += "⚠️ 提醒：寵物絕不增加戰力值！";
+        alert(text);
+    }
+
+    // 寵物扭蛋邏輯 (自動解鎖並自動裝備新獲得的寵物)
     function drawGacha(times) {
+        if(tickets < times) {
+            alert("❌ 扭蛋券不足！請參加活動或每日登入獲取扭蛋券。");
+            return;
+        }
+
+        tickets -= times;
         drawCount += times;
-        power += times * 20;
-        updateHUD();
-        
-        const pets = ['🐉', '🦄', '🦅'];
-        const randomPet = pets[Math.floor(Math.random() * pets.length)];
-        document.getElementById('gachaDisplay').innerText = randomPet;
+
+        const rand = Math.random() * 100;
+        let rarity = "N";
+
+        if (rand < 0.331) rarity = "SC";
+        else if (rand < 0.331 + 0.889) rarity = "SAR";
+        else if (rand < 0.331 + 0.889 + 1.412) rarity = "AR";
+        else if (rand < 0.331 + 0.889 + 1.412 + 3.114) rarity = "SSR";
+        else if (rand < 0.331 + 0.889 + 1.412 + 3.114 + 5.667) rarity = "SR";
+        else if (rand < 0.331 + 0.889 + 1.412 + 3.114 + 5.667 + 25.000) rarity = "R";
+
+        const pool = petDatabase[rarity].items;
+        const drawnPet = pool[Math.floor(Math.random() * pool.length)];
+
+        // 解鎖並自動裝備新寵物
+        if(!ownedPets.includes(drawnPet.code)) {
+            ownedPets.push(drawnPet.code);
+        }
+        currentSelectedPetCode = drawnPet.code; // 自動裝備！
+
+        const box = document.getElementById('gachaDisplayBox');
+        const img = new Image();
+        img.src = drawnPet.img;
+        img.onload = () => { box.innerHTML = `<img src="${drawnPet.img}" style="width:100%;height:100%;object-fit:contain;">`; };
+        img.onerror = () => { box.innerHTML = `<div style="font-size:55px;">${drawnPet.icon}</div>`; };
+
+        document.getElementById('gachaDisplayName').innerText = `[${drawnPet.code}] ${drawnPet.name} (${rarity})`;
         document.getElementById('gachaDrawCount').innerText = `已抽次數：${drawCount}`;
 
-        if(drawCount >= 10) {
-            document.getElementById('milestoneText').innerText = "里程碑：已解鎖 SAR 獎勵！";
-        }
-        alert(`✨ 成功抽取 ${times} 次！獲得 ${times * 20} 戰力！`);
+        updateHUD();
+        alert(`✨ 恭喜獲得：[${rarity}] ${drawnPet.name} ${drawnPet.icon}！\n🎉 已解鎖並自動為您更換至舞台！`);
     }
 
     // 初始化
