@@ -1,322 +1,461 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>戰力手帳</title>
-    <style>
-        :root {
-            --card-bg: rgba(20, 30, 45, 0.85);
-            --modal-bg: #1c232d;
-            --text-main: #ffffff;
-            --accent-cyan: #00f2fe;
-            --accent-gold: #ffcc00;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我讀自升級</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      background-color: #0b0b12;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 430px;
+      height: 100vh;
+      max-height: 932px;
+      background: #12121c;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background: #000; color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    /* 舞台與角色區 */
+    .stage-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .stage-bg {
+      background: radial-gradient(circle at 50% 40%, #2a1b4e 0%, #12121c 70%);
+      z-index: 1;
+    }
+    
+    #stageCharacter {
+      position: absolute;
+      bottom: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 300px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      z-index: 2;
+    }
+    
+    #stagePet {
+      position: absolute;
+      bottom: 22%;
+      left: 18%;
+      width: 110px;
+      height: 110px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      z-index: 3;
+      font-size: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+    }
+    #stagePet img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
-        /* 主容器 */
-        .game-container {
-            width: 100%; max-width: 900px; height: 100vh; max-height: 650px;
-            position: relative; overflow: hidden; border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6); display: flex;
-            flex-direction: column; justify-content: space-between;
-        }
+    /* 頂部 HUD */
+    .top-hud {
+      position: relative;
+      z-index: 10;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+    }
+    .user-profile-card {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+    }
+    .avatar-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #3a2d5c;
+      margin-right: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      border: 2px solid #ffd700;
+      overflow: hidden;
+    }
+    .avatar-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .progress-bar-bg {
+      width: 100px;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #ffd700;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .setting-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+    }
 
-        /* 舞台圖層 */
-        .game-stage {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-            background: #111 url('bg_main.png') center/cover no-repeat;
-        }
-        .stage-layer { position: absolute; pointer-events: none; }
-        
-        /* 人物圖層：定位至左下角山頭 */
-        .character-layer {
-            left: 12%;
-            bottom: 15%;
-            width: 280px;
-            height: 480px;
-            background-size: contain;
-            background-position: center bottom;
-            background-repeat: no-repeat;
-            transition: background-image 0.3s ease;
-            z-index: 2;
-        }
-        
-        /* 寵物圖層：定位至人物右側（中偏右草地上） */
-        .pet-layer {
-            left: 25%;
-            bottom: 12%;
-            width: 120px;
-            height: 120px;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-        }
-        .pet-layer img { width: 100%; height: 100%; object-fit: contain; }
+    /* 底部 HUD */
+    .bottom-hud {
+      position: relative;
+      z-index: 10;
+      padding: 20px;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .quick-wheels {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-main {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 87, 34, 0.4);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      transition: transform 0.05s ease;
+    }
+    .btn-main:active {
+      transform: scale(0.97);
+    }
+    .btn-sec {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+    }
 
-        /* 頂部 HUD */
-        .top-hud { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; z-index: 10; }
-        .user-profile-card {
-            background: var(--card-bg); backdrop-filter: blur(8px); padding: 8px 14px;
-            border-radius: 12px; display: flex; align-items: center; gap: 12px;
-            border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
-        }
-        .avatar-box { width: 44px; height: 44px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent-gold); overflow: hidden; }
-        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-        .user-info { display: flex; flex-direction: column; gap: 2px; }
-        .setting-btn { width: 40px; height: 40px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+    /* 彈窗蓋板 */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #1e1e2d;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 360px;
+      padding: 22px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+    }
 
-        /* 底部 HUD */
-        .bottom-hud { display: flex; justify-content: space-between; align-items: flex-end; padding: 20px; z-index: 10; }
-        .btn-main { background: var(--card-bg); border: 1px solid var(--accent-cyan); color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; backdrop-filter: blur(6px); }
-        .quick-wheels { display: flex; gap: 12px; }
-        .circle-btn {
-            width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.7);
-            border: 2px solid var(--accent-gold); color: white; font-size: 11px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
-        }
+    /* 全螢幕獨立頁面 */
+    .full-page-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #12121c;
+      z-index: 90;
+      display: none;
+      flex-direction: column;
+    }
+    .page-header {
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
 
-        /* 彈窗遮罩 */
-        .modal-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center;
-            align-items: center; z-index: 100; backdrop-filter: blur(4px);
-        }
-        .modal-card {
-            background: var(--modal-bg); border-radius: 16px; padding: 20px;
-            width: 90%; max-width: 420px; max-height: 85vh; overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.2); position: relative;
-        }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; }
-        .modal-title { font-size: 16px; font-weight: bold; color: var(--accent-cyan); }
-        .btn-close { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; }
+    /* 寵物網格 (70種寵物圖鑑) */
+    .pet-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding: 5px;
+    }
+    .pet-grid-item {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .pet-grid-item.locked {
+      filter: grayscale(1);
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .pet-grid-item.active {
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+      background: rgba(255, 215, 0, 0.1);
+    }
 
-        /* 全螢幕頁面 */
-        .full-page-view {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #12161f; z-index: 90; display: none; flex-direction: column;
-            justify-content: space-between; padding: 20px; box-sizing: border-box;
-        }
-        .page-header { display: flex; justify-content: space-between; align-items: center; }
-        .btn-back { background: #e74c3c; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    /* 轉盤樣式 */
+    .wheel-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 30px auto;
+    }
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 6px solid #ffd700;
+      box-sizing: border-box;
+      transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1);
+      background: conic-gradient(
+        #ff5252 0deg 90deg, 
+        #e040fb 90deg 180deg, 
+        #448aff 180deg 270deg, 
+        #1de9b6 270deg 360deg
+      );
+    }
+    .pointer {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 26px solid #ffffff;
+      z-index: 10;
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.5));
+    }
 
-        /* 轉盤樣式 */
-        .wheel-wrapper { position: relative; width: 260px; height: 260px; margin: 15px auto; }
-        .wheel-disc {
-            width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent-gold);
-            position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0.99, 0.35, 1);
-            background: conic-gradient(#e74c3c 0 90deg, #f1c40f 90deg 180deg, #3498db 180deg 270deg, #9b59b6 270deg 360deg);
-        }
-        .wheel-pointer {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
-            border-top: 24px solid var(--accent-gold); z-index: 10;
-        }
-        .wheel-label {
-            position: absolute; width: 100%; height: 100%; text-align: center;
-            font-size: 13px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
-            padding-top: 20px; transform-origin: 50% 50%;
-        }
-
-        /* 扭蛋展示區 */
-        .gacha-box { width: 140px; height: 140px; margin: 10px auto; background: rgba(255,255,255,0.05); border: 2px solid var(--accent-cyan); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-        .btn-draw { background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 10px 24px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #000; margin: 0 5px; }
-
-        /* 通用選單 */
-        .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .input-text { background: #111; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 6px; width: 130px; }
-        .pet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
-        .pet-grid-item { background: #111; border: 1px solid #444; border-radius: 6px; padding: 8px; text-align: center; font-size: 20px; cursor: pointer; position: relative; }
-        .pet-grid-item.active { border-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
-        .pet-grid-item.locked { opacity: 0.25; filter: grayscale(100%); cursor: not-allowed; }
-        .progress-bar-bg { width: 100%; background: #333; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 4px; }
-        .progress-bar-fill { width: 0%; background: var(--accent-cyan); height: 100%; transition: width 0.3s; }
-        .currency-bar { display: flex; gap: 15px; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
-    </style>
+    /* 抽卡顯示區域 */
+    .gacha-display-box {
+      width: 140px;
+      height: 140px;
+      margin: 15px auto;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 2px dashed rgba(255,255,255,0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 60px;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
 
 <div class="game-container">
-    <div class="game-stage">
-        <div class="stage-layer character-layer" id="stageCharacter"></div>
-        <div class="stage-layer pet-layer" id="stagePet">🐱</div>
+  <!-- 背景與角色/寵物舞台 -->
+  <div class="stage-layer stage-bg"></div>
+  <div class="stage-layer" id="stageCharacter"></div>
+  <div class="stage-layer" id="stagePet"></div>
+
+  <!-- 頂部 HUD -->
+  <div class="top-hud">
+    <div class="user-profile-card" onclick="openModal('avatarModal')">
+      <div class="avatar-box" id="hudAvatar">🐱</div>
+      <div>
+        <div style="font-size: 14px; font-weight: bold;"><span id="hudName">大俠</span> (<span id="hudGender">♂</span>)</div>
+        <div style="font-size: 12px; color: #ffd700;">戰力: <span id="hudPower">100</span> (Lv.<span id="hudLevel">1</span>)</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+      </div>
     </div>
+    <button class="setting-btn" onclick="openModal('settingModal')">⚙️</button>
+  </div>
 
-    <div class="top-hud">
-        <div class="user-profile-card" onclick="openModal('avatarModal')">
-            <div class="avatar-box" id="hudAvatar">🐱</div>
-            <div class="user-info">
-                <div style="font-weight:bold;"><span id="hudName">Nickchen</span> <span id="hudGender">♀</span></div>
-                <div style="font-size:12px; color:var(--accent-cyan);">Level <span id="hudLevel">0</span> (戰力: <span id="hudPower">0</span>)</div>
-            </div>
-        </div>
-        <div class="setting-btn" onclick="openModal('settingsModal')">⚙️</div>
+  <!-- 底部 HUD -->
+  <div class="bottom-hud">
+    <div class="quick-wheels">
+      <button class="btn-sec" style="flex:1;" onclick="openModal('wheelSelectModal')">🎡 戰力轉盤</button>
+      <button class="btn-sec" style="flex:1;" onclick="openModal('petSelectModal')">🐾 寵物連抽</button>
     </div>
+    <button class="btn-main" onclick="addDemoScore()">⚡ 修行鍛鍊 (+15分數)</button>
+  </div>
 
-    <div class="bottom-hud">
-        <button class="btn-main" onclick="addDemoScore()">+15 分數 (測試用)</button>
-        <div class="quick-wheels">
-            <div class="circle-btn" onclick="openModal('wheelSelectModal')">🎡<br>轉盤</div>
-            <div class="circle-btn" onclick="openModal('settingsModal')">⚙️<br>設定</div>
-        </div>
+  <!-- 彈窗：選擇轉盤 -->
+  <div class="modal-overlay" id="wheelSelectModal">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-header">
+        <h3>選擇轉盤模式</h3>
+        <button class="close-btn" onclick="closeModal('wheelSelectModal')">✕</button>
+      </div>
+      <button class="btn-main" style="margin-bottom: 12px;" onclick="openFullPage('wheelPage');">🎡 戰力卡牌轉盤</button>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="wheelSelectModal">
-        <div class="modal-card" style="text-align: center;">
-            <div class="modal-header">
-                <div class="modal-title">轉盤選擇</div>
-                <button class="btn-close" onclick="closeModal('wheelSelectModal')">✕</button>
-            </div>
-            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('powerWheelPage')">🎲 戰力卡牌轉盤</button>
-            <button class="btn-main" style="width:100%; margin: 8px 0;" onclick="openFullPage('petGachaPage')">🐾 70種寵物扭蛋</button>
-        </div>
+  <!-- 彈窗：遊戲設定 / 個人資訊 -->
+  <div class="modal-overlay" id="settingModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>角色與遊戲設定</h3>
+        <button class="close-btn" onclick="closeModal('settingModal')">✕</button>
+      </div>
+      <p style="margin-bottom: 8px;">修改名字：</p>
+      <input type="text" id="nameInput" style="width:100%; padding:8px; border-radius:6px; border:1px solid #444; background:#222; color:#fff; margin-bottom:15px;" onchange="updateName(this.value)">
+      <p style="font-size: 14px; color: #aaa;">當前戰力：<span id="modalPower" style="color:#ffd700;">100</span></p>
+      <p style="font-size: 14px; color: #aaa;">當前段位：<span id="rankPointText" style="color:#ffd700;">1 階 0 點</span></p>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-title">設定</div>
-                <button class="btn-close" onclick="closeModal('settingsModal')">✕</button>
-            </div>
-            <div class="menu-row"><span>音量 🔊</span><input type="range" min="0" max="100" value="80"></div>
-            <div class="menu-row"><span>音效 🎵</span><input type="range" min="0" max="100" value="80"></div>
-            <div class="menu-row" style="margin-top: 10px;"><span>創立時間</span><span style="color: #aaa; font-size: 13px;">2026 / 09 / 19</span></div>
-        </div>
+  <!-- 彈窗：換裝/角色切換 -->
+  <div class="modal-overlay" id="avatarModal">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-header">
+        <h3>選擇性別 (連動預設寵物)</h3>
+        <button class="close-btn" onclick="closeModal('avatarModal')">✕</button>
+      </div>
+      <div style="display: flex; gap: 15px; margin-top: 10px;">
+        <button class="btn-sec" style="flex: 1; padding: 15px;" onclick="setGender('♂'); closeModal('avatarModal');">👦 男 (預設柴犬)</button>
+        <button class="btn-sec" style="flex: 1; padding: 15px;" onclick="setGender('♀'); closeModal('avatarModal');">👧 女 (預設黑貓)</button>
+      </div>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="avatarModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-title">角色資訊與設定</div>
-                <button class="btn-close" onclick="closeModal('avatarModal')">✕</button>
-            </div>
-            <div class="menu-row">
-                <span>設定頭像 (已解鎖寵物)</span>
-                <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="openModal('petSelectModal')">選擇</button>
-            </div>
-            <div class="menu-row">
-                <span>更改名字</span>
-                <input type="text" id="inputName" class="input-text" value="Nickchen" maxlength="10" onchange="updateName(this.value)">
-            </div>
-            <div class="menu-row">
-                <span>性別設定</span>
-                <div>
-                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♂')">♂ (狗狗)</button>
-                    <button class="btn-main" style="padding: 4px 10px;" onclick="setGender('♀')">♀ (貓貓)</button>
-                </div>
-            </div>
-            <div style="margin-top: 12px;">
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                    <span>當前戰力：<b id="modalPower">0</b></span>
-                    <span>階級進度：<b id="progressText">0/100</b></span>
-                </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-                <div style="font-size: 11px; color: #888; margin-top: 4px; text-align: right;">每 100 戰力升一階</div>
-            </div>
-        </div>
+  <!-- 彈窗：寵物抽卡與圖鑑選單 -->
+  <div class="modal-overlay" id="petSelectModal">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-header">
+        <h3>寵物靈尋 (已解鎖: <span id="ownedPetsCount" style="color:#ffd700;">1</span>/70)</h3>
+        <button class="close-btn" onclick="closeModal('petSelectModal')">✕</button>
+      </div>
+      <div class="gacha-display-box" id="gachaDisplayBox">❓</div>
+      <div id="gachaDisplayName" style="font-size:14px; font-weight:bold; margin-bottom:5px; color:#ffd700;">準備靈尋...</div>
+      <div id="gachaDrawCount" style="font-size:12px; color:#888; margin-bottom:10px;">已抽次數：0</div>
+      <p style="margin-bottom: 12px; font-size: 13px;">扭蛋券: <span id="gachaTickets" style="color:#ffd700; font-weight:bold;">10</span> 張</p>
+      <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <button class="btn-main" style="flex: 1; font-size: 14px; padding: 10px;" onclick="drawGacha(1)">單尋 (1張)</button>
+        <button class="btn-main" style="flex: 1; font-size: 14px; padding: 10px;" onclick="drawGacha(10)">十連尋 (10張)</button>
+      </div>
+      <button class="btn-sec" style="width: 100%; font-size: 12px;" onclick="showGachaProbability()">查看 70 種寵物機率表</button>
+      <div style="margin-top: 15px; text-align: left; font-size: 12px; color: #aaa;">點擊切換舞台寵物：</div>
+      <div class="pet-grid" id="petGrid"></div>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="petSelectModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-title">選擇頭像 (70種寵物庫)</div>
-                <button class="btn-close" onclick="closeModal('petSelectModal')">✕</button>
-            </div>
-            <div style="font-size: 11px; color: #aaa; margin-bottom: 8px;">亮色為已獲得，灰色為未解鎖 (點擊可立即替換)</div>
-            <div class="pet-grid" id="petGrid"></div>
-        </div>
+  <!-- 全螢幕頁面：戰力卡牌轉盤 -->
+  <div class="full-page-view" id="wheelPage">
+    <div class="page-header">
+      <button class="btn-sec" onclick="closeFullPage('wheelPage')">⬅ 返回遊戲</button>
+      <h3 style="margin-left: 15px;">戰力卡牌轉盤</h3>
     </div>
-
-    <div class="full-page-view" id="powerWheelPage">
-        <div class="page-header">
-            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showWheelProbability()">機率與Buff池</button>
-            <div style="font-size: 18px; font-weight: bold; color: var(--accent-gold);">戰力卡牌轉盤</div>
-            <div></div>
-        </div>
-
-        <div style="text-align: center;">
-            <div class="currency-bar" style="justify-content: center; margin-bottom: 10px;">
-                <span>🎯 分數：<b id="wheelScore">0</b></span>
-                <span>💎 點數：<b id="wheelPoints" style="color:var(--accent-gold);">0</b></span>
-                <span>⚔️ 戰力：<b id="wheelCurrentPower">0</b></span>
-            </div>
-
-            <div class="wheel-wrapper">
-                <div class="wheel-pointer"></div>
-                <div class="wheel-disc" id="wheelDisc">
-                    <div class="wheel-label" style="transform: rotate(45deg);">🏆 SSR (1%)</div>
-                    <div class="wheel-label" style="transform: rotate(135deg);">🟣 SR (10%)</div>
-                    <div class="wheel-label" style="transform: rotate(225deg);">🔵 R (50%)</div>
-                    <div class="wheel-label" style="transform: rotate(315deg);">⚪ N (39%)</div>
-                </div>
-            </div>
-
-            <div style="font-size: 12px; color: #aaa; margin-top: 5px;">每次抽獎消耗 <b>3 點數</b> (5分數 = 1點數)</div>
-            <button class="btn-draw" style="margin-top: 10px; padding: 10px 30px;" onclick="spinWheel()">開始抽卡 (消耗3點)</button>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div style="font-size: 14px; color: var(--accent-gold);" id="rankPointText">0 階 0 點</div>
-            <button class="btn-back" onclick="closeFullPage('powerWheelPage')">↩ 返回主頁</button>
-        </div>
+    <div style="text-align: center; padding: 20px;">
+      <p style="font-size: 14px; color: #aaa;">目前分數: <span id="wheelScore" style="color: #ffd700;">0</span> | 可用點數: <span id="wheelPoints" style="color: #ffd700;">0</span></p>
+      <p style="font-size: 12px; color: #888; margin-top: 2px;">當前戰力：<span id="wheelCurrentPower">100</span></p>
+      <div class="wheel-container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheelDisc"></div>
+      </div>
+      <button class="btn-main" style="width: 220px;" onclick="spinWheel()">啟動轉盤 (消耗 3 點數)</button>
+      <br>
+      <button class="btn-sec" style="margin-top: 20px; font-size: 12px;" onclick="showWheelProbability()">查看 Buff 機率表</button>
     </div>
-
-    <div class="full-page-view" id="petGachaPage">
-        <div class="page-header">
-            <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showGachaProbability()">完整機率與70寵物</button>
-            <div style="font-size: 18px; font-weight: bold; color: var(--accent-cyan);">寵物扭蛋 (70種)</div>
-            <div></div>
-        </div>
-
-        <div style="text-align: center;">
-            <div class="currency-bar" style="justify-content: center; margin-bottom: 10px;">
-                <span>🎟️ 扭蛋券：<b id="gachaTickets" style="color:var(--accent-cyan);">1</b> 張</span>
-                <span>🐾 搜集進度：<b id="ownedPetsCount">2</b> / 70</span>
-            </div>
-            
-            <div class="gacha-box" id="gachaDisplayBox">
-                <div style="font-size: 55px;" id="gachaDisplayIcon">🐱</div>
-            </div>
-            <div style="font-size: 12px; color: var(--accent-gold); font-weight: bold; margin-top: 5px;" id="gachaDisplayName">暗夜獵手黑貓 (R)</div>
-            <div style="font-size: 11px; color: #aaa; margin-bottom: 10px;">寵物僅供收藏/頭像，<b>不增加戰力</b></div>
-
-            <div style="font-size: 14px; margin-bottom: 10px;" id="gachaDrawCount">已抽次數：0</div>
-
-            <div>
-                <button class="btn-draw" onclick="drawGacha(1)">抽 1 次 (消耗1券)</button>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div style="font-size: 12px; color: #aaa;" id="milestoneText">里程碑：累積抽卡解鎖特殊稱號</div>
-            <button class="btn-back" onclick="closeFullPage('petGachaPage')">↩ 返回主頁</button>
-        </div>
-    </div>
+  </div>
 </div>
 
 <script>
-    // 全域數據狀態
-    let power = 0;
-    let score = 30;
-    let points = 6;
-    let tickets = 3;
+    let power = 100;
+    let score = 0;
+    let points = 0;
+    let tickets = 10;
     let drawCount = 0;
-    let currentGender = '♀'; // 預設女生
-    let currentRotation = 0;
+    let currentGender = '♂';
+    let currentSelectedPetCode = 'R-03'; // 預設柴犬
+    let ownedPets = ['R-03', 'R-02'];
     let isSpinning = false;
+    let currentRotation = 0;
 
-    // 🐾 預設已解鎖包含柴犬(R-03)與黑貓(R-02)
-    let ownedPets = ["R-03", "R-02"]; 
-    let currentSelectedPetCode = "R-02"; // 預設女生配黑貓
-
-    // 🏆 戰力 Buff 卡牌獎池
+    // 🎲 21 種 Buff 資料庫
     const buffPool = {
         SSR: [
             { name: "神聖戰力聖杯", base: 1000, boosted: 3000, desc: "戰力直接大爆發！" },
@@ -419,18 +558,17 @@
             let found = petDatabase[rarity].items.find(p => p.code === code);
             if(found) return found;
         }
-        return petDatabase.R.items[1]; // 預設黑貓
+        return petDatabase.R.items[1];
     }
 
     function updateHUD() {
-        document.getElementById('hudPower').innerText = power;
-        document.getElementById('modalPower').innerText = power;
-        document.getElementById('wheelCurrentPower').innerText = power;
+        document.getElementById('hudPower').innerText = power.toLocaleString();
+        document.getElementById('modalPower').innerText = power.toLocaleString();
+        document.getElementById('wheelCurrentPower').innerText = power.toLocaleString();
 
         const level = Math.floor(power / 100);
         const currentProgress = power % 100;
         document.getElementById('hudLevel').innerText = level;
-        document.getElementById('progressText').innerText = `${currentProgress}/100`;
         document.getElementById('progressBar').style.width = `${currentProgress}%`;
         document.getElementById('rankPointText').innerText = `${level} 階 ${currentProgress} 點`;
 
@@ -448,7 +586,10 @@
     function updateCharacterLayer() {
         const charLayer = document.getElementById('stageCharacter');
         const imgName = currentGender === '♂' ? 'char_male.png' : 'char_female.png';
-        charLayer.style.backgroundImage = `url('${imgName}')`;
+        const img = new Image();
+        img.src = imgName;
+        img.onload = () => { charLayer.style.backgroundImage = `url('${imgName}')`; charLayer.innerText = ''; };
+        img.onerror = () => { charLayer.style.backgroundImage = 'none'; charLayer.innerText = currentGender === '♂' ? '👦' : '👧'; charLayer.style.fontSize = '120px'; charLayer.style.display = 'flex'; charLayer.style.alignItems = 'center'; charLayer.style.justifyContent = 'center'; };
     }
 
     function updatePetLayer() {
@@ -503,26 +644,23 @@
 
     function updateName(val) { if(val.trim() !== "") document.getElementById('hudName').innerText = val; }
     
-    // 性別連動預設寵物 (男生=柴犬, 女生=黑貓)
     function setGender(gender) {
         currentGender = gender;
         document.getElementById('hudGender').innerText = gender;
         if (gender === '♂') {
-            currentSelectedPetCode = "R-03"; // 🐕 忠誠柴犬戰士
+            currentSelectedPetCode = "R-03";
         } else {
-            currentSelectedPetCode = "R-02"; // 🐱 暗夜獵手黑貓
+            currentSelectedPetCode = "R-02";
         }
         updateHUD();
     }
 
-    // 選擇/切換寵物
     function selectPet(petCode) {
         currentSelectedPetCode = petCode;
         updateHUD();
         closeModal('petSelectModal');
     }
 
-    // 戰力轉盤邏輯
     function spinWheel() {
         if(isSpinning) return;
         if(points < 3) {
@@ -569,7 +707,7 @@
     }
 
     function showWheelProbability() {
-        alert("🎲 戰力卡牌轉盤機率與 Buff 表：\n\n🏆 SSR (1%)：\n - 神聖戰力聖杯 (+1000 / 增幅 +3000)\n - 時光逆轉沙漏\n - 永恆王者王冠\n\n🟣 SR (10%)：\n - 超額爆發力、目標強化劑、連續執念護符\n\n🔵 R (50%)：\n - 經驗加速魔藥、專注藥水、早鳥羽毛等 10 種戰術 Buff\n\n⚪ N (39%)：\n - 基礎戰力結晶 (+100 / 增幅 +300) 等 10 種結晶");
+        alert("🎲 戰力卡牌轉盤機率與 Buff 表：\n\n🏆 SSR (1%)：\n - 神聖戰力聖杯 (+1000 / 增幅 +3000)\n - 時光逆轉沙漏\n - 永恆王者王冠\n\n🟣 SR (10%)：\n - 超額爆發力、目標強化劑、連續執念護符\n\n🔵 R (50%)：\n - 經驗加速魔藥、專注藥水、早鳥羽毛等 10 種戰術 Buff\n\n⚪ N (39%)：\n - 基礎戰力結晶 (+100 / 增幅 +300) 等 9 種結晶");
     }
 
     function showGachaProbability() {
@@ -585,7 +723,6 @@
         alert(text);
     }
 
-    // 寵物扭蛋邏輯 (自動解鎖並自動裝備新獲得的寵物)
     function drawGacha(times) {
         if(tickets < times) {
             alert("❌ 扭蛋券不足！請參加活動獲取扭蛋券。");
@@ -608,11 +745,10 @@
         const pool = petDatabase[rarity].items;
         const drawnPet = pool[Math.floor(Math.random() * pool.length)];
 
-        // 解鎖並自動裝備新寵物
         if(!ownedPets.includes(drawnPet.code)) {
             ownedPets.push(drawnPet.code);
         }
-        currentSelectedPetCode = drawnPet.code; // 自動裝備
+        currentSelectedPetCode = drawnPet.code;
 
         const box = document.getElementById('gachaDisplayBox');
         const img = new Image();
@@ -627,9 +763,7 @@
         alert(`✨ 恭喜獲得：[${rarity}] ${drawnPet.name} ${drawnPet.icon}！\n🎉 已解鎖並自動為您更換至舞台！`);
     }
 
-    // 初始化
-    updateHUD();
+    window.onload = updateHUD;
 </script>
-
 </body>
 </html>
