@@ -44,7 +44,7 @@
             z-index: 2;
         }
         
-        /* 寵物圖層：定位至人物右側（中偏右草地上，保持距離） */
+        /* 寵物圖層：定位至人物右側（中偏右草地上） */
         .pet-layer {
             left: 25%;
             bottom: 12%;
@@ -144,13 +144,11 @@
 <body>
 
 <div class="game-container">
-    <!-- 舞台背景與疊加圖層 -->
     <div class="game-stage">
         <div class="stage-layer character-layer" id="stageCharacter"></div>
         <div class="stage-layer pet-layer" id="stagePet">🐱</div>
     </div>
 
-    <!-- 頂部 HUD -->
     <div class="top-hud">
         <div class="user-profile-card" onclick="openModal('avatarModal')">
             <div class="avatar-box" id="hudAvatar">🐱</div>
@@ -162,7 +160,6 @@
         <div class="setting-btn" onclick="openModal('settingsModal')">⚙️</div>
     </div>
 
-    <!-- 底部 HUD -->
     <div class="bottom-hud">
         <button class="btn-main" onclick="addDemoScore()">+15 分數 (測試用)</button>
         <div class="quick-wheels">
@@ -171,7 +168,6 @@
         </div>
     </div>
 
-    <!-- 轉盤選擇彈窗 -->
     <div class="modal-overlay" id="wheelSelectModal">
         <div class="modal-card" style="text-align: center;">
             <div class="modal-header">
@@ -183,7 +179,6 @@
         </div>
     </div>
 
-    <!-- 設定彈窗 -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -196,7 +191,6 @@
         </div>
     </div>
 
-    <!-- 頭像/個人彈窗 -->
     <div class="modal-overlay" id="avatarModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -229,7 +223,6 @@
         </div>
     </div>
 
-    <!-- 寵物選擇彈窗 -->
     <div class="modal-overlay" id="petSelectModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -241,7 +234,6 @@
         </div>
     </div>
 
-    <!-- 戰力轉盤頁面 -->
     <div class="full-page-view" id="powerWheelPage">
         <div class="page-header">
             <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showWheelProbability()">機率與Buff池</button>
@@ -276,7 +268,6 @@
         </div>
     </div>
 
-    <!-- 寵物扭蛋頁面 -->
     <div class="full-page-view" id="petGachaPage">
         <div class="page-header">
             <button class="btn-main" style="padding: 4px 10px; font-size: 12px;" onclick="showGachaProbability()">完整機率與70寵物</button>
@@ -597,7 +588,7 @@
     // 寵物扭蛋邏輯 (自動解鎖並自動裝備新獲得的寵物)
     function drawGacha(times) {
         if(tickets < times) {
-            alert("❌ 扭蛋券不足！請參加活動或每日登入獲取扭蛋券。");
+            alert("❌ 扭蛋券不足！請參加活動獲取扭蛋券。");
             return;
         }
 
@@ -621,7 +612,7 @@
         if(!ownedPets.includes(drawnPet.code)) {
             ownedPets.push(drawnPet.code);
         }
-        currentSelectedPetCode = drawnPet.code; // 自動裝備！
+        currentSelectedPetCode = drawnPet.code; // 自動裝備
 
         const box = document.getElementById('gachaDisplayBox');
         const img = new Image();
