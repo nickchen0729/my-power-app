@@ -46,7 +46,7 @@
         .character-avatar { position: absolute; bottom: 15%; left: 10%; height: 230px; z-index: 5; pointer-events: none; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)); }
         /* .pet-avatar 的垂直位置（top 或 bottom）改由 JS 動態計算並設定成 px，
            依「會飛」或「站地上」跟角色頭部/腳底對齊，CSS 這裡只負責水平位置 */
-        .pet-avatar { position: absolute; right: 4%; z-index: 5; pointer-events: none; animation: bounce 2s infinite ease-in-out; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); }
+        .pet-avatar { position: absolute; right: 2.3%; z-index: 5; pointer-events: none; animation: bounce 2s infinite ease-in-out; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); }
         /* 直式手機：寵物（尤其是會飛、比較寬的）容易跟角色重疊，拉開一點距離 */
         @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
             .character-avatar { left: 3%; }
@@ -928,7 +928,13 @@
             // 橫式手機容器很矮，角色本身位置偏低，如果寵物繼續對齊角色頭部，放大後會被底部裁掉，
             // 所以橫式改成用容器高度的固定比例定位（不跟著角色頭部），確保完整顯示在畫面內
             const isTouchLandscape = window.matchMedia('(orientation: landscape) and (hover: none) and (pointer: coarse)').matches;
-            if (isTouchLandscape) topPx = containerRect.height * 0.03;
+            const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+            if (isTouchLandscape) {
+                topPx = containerRect.height * 0.03;
+            } else if (!isTouchDevice) {
+                // 桌機：寵物頭部要比角色頭部再高一截，飄在更上方，不是齊平（直式手機維持原本的頭部齊平，不受影響）
+                topPx -= containerRect.height * 0.14;
+            }
             petEl.style.top = topPx + 'px';
             petEl.style.bottom = 'auto';
         } else {
