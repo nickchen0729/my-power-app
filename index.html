@@ -742,6 +742,12 @@
     // 所有「可顯示/可選擇」的寵物（頭像選擇、背包）＝ 正式圖鑑 + 測試寵物
     const ALL_DISPLAY_PETS = [...PET_POOL, ...BONUS_PETS];
 
+    // 有動畫版本（webp 循環動畫）的寵物，主頁站台顯示時優先用這個而不是靜態圖
+    const PET_ANIM_OVERRIDES = { 'AR-03': 'assets/pet_ar_03_anim.webp' }; // 疾風蒼狼皇：奔跑循環動畫
+    ALL_DISPLAY_PETS.forEach(p => {
+        if (PET_ANIM_OVERRIDES[p.id]) p.animImg = PET_ANIM_OVERRIDES[p.id];
+    });
+
     // 依 emoji 概略判斷「會飛」的寵物（鳥類、龍、蝙蝠、蝴蝶等），沒對到的一律當成「站地上」
     const FLYING_EMOJIS = new Set(['🐉','🦅','🦉','🕊️','🦇','🦋','🐦','🦜','🦆','🐤','🐥','🦩','🦢','🪿','🐝','🦗']);
     // 有正式美術圖、需要手動指定的例外（例如乘著翅膀但 emoji 判斷不到的寵物）
@@ -1643,11 +1649,16 @@
     // 只有開發者自己的 Google 帳號（UID 比對）才會擁有 TEST 等級的測試/贈送寵物（例如路西法），
     // 其他人（包含全新帳號、未登入本機存檔）一律不會有 —— 僅在 DEV_MODE_GRANT_ALL_TEST_PETS 為 false 時生效
     const DEVELOPER_UID = '0USeTQH2hMPO5wj7IrWqoYMBd1G2';
+    // 這些一般寵物（不是 BONUS_PETS 測試寵物）直接送給開發者自己的帳號，不用抽
+    const DEVELOPER_EXTRA_GRANT_IDS = ['AR-03']; // 疾風蒼狼皇
     function grantDeveloperBonusPetIfOwner() {
         const isDeveloper = currentUser && currentUser.uid === DEVELOPER_UID;
         if (!DEV_MODE_GRANT_ALL_TEST_PETS && !isDeveloper) return;
         let changed = false;
         BONUS_PETS.forEach(p => { if (!ownedPets.has(p.id)) { ownedPets.add(p.id); changed = true; } });
+        if (isDeveloper) {
+            DEVELOPER_EXTRA_GRANT_IDS.forEach(id => { if (!ownedPets.has(id)) { ownedPets.add(id); changed = true; } });
+        }
         if (changed) { refreshAllUI(); saveState(); }
     }
 
